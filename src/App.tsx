@@ -1,171 +1,189 @@
-import { useState } from "react"
-import { maps } from "./data/maps"
+import { useMemo, useState } from "react"
+import { maps, type GameMap } from "./data/maps"
 import { brawlers, type Brawler } from "./data/brawlers"
 import BrawlerCard from "./components/BrawlerCard"
+import DraftBoard from "./components/DraftBoard"
+import TopBar from "./components/TopBar"
 
 import "./App.css"
 
-function App() {
-  const [selectedMap, setSelectedMap] = useState("")
-  const [brawlerSearch, setBrawlerSearch] = useState("")
-  const [selectedBrawler, setSelectedBrawler] = useState<Brawler | null>(null)
+type Team = "blue" | "red"
+type Phase = "bans" | "picks" | "complete"
+type DraftAction = {
+  phase: Exclude<Phase, "complete">
+  team: Team
+  brawler: Brawler
+}
 
-  const [blueTeam, setBlueTeam] = useState<Brawler[]>([])
-  const [redTeam, setRedTeam] = useState<Brawler[]>([])
-  const [bans, setBans] = useState<Brawler[]>([])
-  
-  const mode = 
-    selectedMap && maps[selectedMap as keyof typeof maps]
-      ? maps[selectedMap as keyof typeof maps].mode
-      : ""
+type DraftStep = {
+  team: Team
+  count: number
+}
 
-  function canPick(brawler: Brawler) {
-    return (
-      !blueTeam.some(b => b.name === brawler.name) &&
-      !redTeam.some(b => b.name === brawler.name) &&
-      !bans.some(b => b.name === brawler.name)
-    )
-  }
+const draftTemplate: DraftStep[] = [
+  { team: "blue", count: 1 },
+  { team: "red", count: 2 },
+  { team: "blue", count: 2 },
+  { team: "red", count: 1 },
+]
 
-  function pick(team: "blue" | "red") {
-    if (!selectedBrawler) return
-    if (!canPick(selectedBrawler)) return
+function getDraftOrder(startingTeam: Team): Team[] {
+  const order: Team[] = []
 
-    if (team === "blue") {
-      if (blueTeam.length >= 3) return
-      setBlueTeam([...blueTeam, selectedBrawler])
-    } 
-    
-    if (team === "red") {
-      if (redTeam.length >= 3) return
-      setRedTeam([...redTeam, selectedBrawler])
+  draftTemplate.forEach((step) => {
+    const team = startingTeam === "blue" ? step.team : step.team === "blue" ? "red" : "blue"
+
+    for (let i = 0; i < step.count; i += 1) {
+      order.push(team)
     }
+  })
+
+  return order
+}
+
+function getBanTeam(actionCount: number): Team {
+  return actionCount % 2 === 0 ? "blue" : "red"
+}
+
+function App() {
+  const [selectedMap, setSelectedMap] = useState<GameMap | null>(maps["Back Pocket"])
+  const [mapSearch, setMapSearch] = useState("")
+  const [brawlerSearch, setBrawlerSearch] = useState("")
+  const [startingTeam, setStartingTeam] = useState<Team>("blue")
+  const [actions, setActions] = useState<DraftAction[]>([])
+
+  const draftOrder = useMemo(() => getDraftOrder(startingTeam), [startingTeam])
+  const banActions = actions.filter((action) => action.phase === "bans")
+  const pickActions = actions.filter((action) => action.phase === "picks")
+  const blueBans = banActions.filter((action) => action.team === "blue").map((action) => action.brawler)
+  const redBans = banActions.filter((action) => action.team === "red").map((action) => action.brawler)
+  const blueTeam = pickActions.filter((action) => action.team === "blue").map((action) => action.brawler)
+  const redTeam = pickActions.filter((action) => action.team === "red").map((action) => action.brawler)
+  const phase: Phase = banActions.length < 6 ? "bans" : pickActions.length < 6 ? "picks" : "complete"
+  const currentTeam: Team | null = phase === "bans" ? getBanTeam(banActions.length) : phase === "picks" ? draftOrder[pickActions.length] : null
+
+  const filteredMaps = Object.values(maps).filter((map) =>
+    (map.name + " " + map.mode).toLowerCase().includes(mapSearch.toLowerCase()),
+  )
+
+  const filteredBrawlers = brawlers.filter((brawler) =>
+    brawler.name.toLowerCase().includes(brawlerSearch.toLowerCase()),
+  )
+
+  const usedNames = new Set(actions.map((action) => action.brawler.name))
+
+  function resetDraft(nextStartingTeam = startingTeam) {
+    setStartingTeam(nextStartingTeam)
+    setActions([])
+    setBrawlerSearch("")
   }
 
-  function ban() {
-    if (!selectedBrawler) return
-    if (!canPick(selectedBrawler)) return
-    if (bans.length >= 6) return
+  function selectBrawler(brawler: Brawler) {
+    if (phase === "complete" || usedNames.has(brawler.name) || !currentTeam) return
 
-    setBans([...bans, selectedBrawler])
+    setActions((current) => [
+      ...current,
+      {
+        phase,
+        team: currentTeam,
+        brawler,
+      },
+    ])
+    setBrawlerSearch("")
   }
+
+  function undoLast() {
+    setActions((current) => current.slice(0, -1))
+  }
+
+  function handleStartingTeam(team: Team) {
+    resetDraft(team)
+  }
+
+  const phaseLabel = phase === "complete" ? "Draft complete" : (currentTeam === "blue" ? "Blue" : "Red") + " " + (phase === "bans" ? "ban" : "pick")
+  const stepCount = phase === "bans" ? banActions.length + 1 : pickActions.length + 1
+  const totalCount = 6
 
   return (
-    <div className="app">
-      <h1>Brawl Draft</h1>
+    <main className="app">
+      <TopBar
+        mapSearch={mapSearch}
+        setMapSearch={setMapSearch}
+        brawlerSearch={brawlerSearch}
+        setBrawlerSearch={setBrawlerSearch}
+        selectedMap={selectedMap}
+        startingTeam={startingTeam}
+        setStartingTeam={handleStartingTeam}
+        onUndo={undoLast}
+        onReset={() => resetDraft()}
+        canUndo={actions.length > 0}
+      />
 
+      <section className="draft-status" aria-live="polite">
+        <div>
+          <span className="eyebrow">Current turn</span>
+          <strong className={currentTeam ? "team-text " + currentTeam : "team-text"}>{phaseLabel}</strong>
+        </div>
+        <div>
+          <span className="eyebrow">Progress</span>
+          <strong>{phase === "complete" ? "6 / 6 picks" : stepCount + " / " + totalCount}</strong>
+        </div>
+        <div>
+          <span className="eyebrow">Map</span>
+          <strong>{selectedMap ? selectedMap.name : "Choose a map"}</strong>
+        </div>
+      </section>
 
-      {/* Map Selection*/}
-      <div className="card">
-        <h2>Map</h2>
+      <DraftBoard
+        blueTeam={blueTeam}
+        redTeam={redTeam}
+        blueBans={blueBans}
+        redBans={redBans}
+        selectedMap={selectedMap}
+        currentTeam={currentTeam}
+        phase={phase}
+      />
 
-        <input placeholder="Select Map" value={selectedMap} onChange={(e) => setSelectedMap(e.target.value)}/>
-
-        <div className="dropdown">
-          {Object.keys(maps)
-            .filter((m) =>
-              m.toLowerCase().includes(selectedMap.toLowerCase())
-            )
-            .map((map) => (
-              <div
-              key={map}
-              className="dropdown-item"
-              onClick={() => setSelectedMap(map)}
+      <section className="picker-layout">
+        <div className="panel map-picker">
+          <div className="panel-heading">
+            <h2>Maps</h2>
+            <span>{filteredMaps.length}</span>
+          </div>
+          <div className="map-list">
+            {filteredMaps.map((map) => (
+              <button
+                className={"map-option" + (selectedMap?.name === map.name ? " selected" : "")}
+                key={map.name}
+                onClick={() => setSelectedMap(map)}
+                type="button"
               >
-                {map}
-              </div>
-            ))}
-        </div>
-
-        <h3>Mode: {mode || "None"}</h3>
-
-      </div>
-      
-      {/* Brawler Selection*/}
-      <div className="card">
-        <h2>Brawler Selector</h2>
-
-        <input
-          placeholder="Select Brawler"
-          value={brawlerSearch}
-          onChange={(e) => {
-            setBrawlerSearch(e.target.value)
-            setSelectedBrawler(null)
-          }}
-
-        />
-
-        <div className="dropdown">
-          {brawlers
-            .filter((b) =>
-              b.name.toLowerCase().includes(brawlerSearch.toLowerCase())
-            )
-            .map((b) => (
-              <div
-                key={b.name}
-                className="dropdown-item"
-                onClick={() => {
-                  setSelectedBrawler(b)
-                  setBrawlerSearch(b.name)
-                }}
-              >
-                {b.name}
-              </div>
-            ))}
-        </div>
-
-        <div className="buttons">
-          <button onClick={() => pick("blue")}>Pick Blue</button>
-          <button onClick={() => pick("red")}>Pick Red</button>
-          <button onClick={ban}>Ban</button>
-        </div>
-
-      </div>
-
-      {/* Team Display*/}
-      <div className="row">
-        <div className="card">
-          <h2>Blue Team</h2>
-
-          <div className="team-display">
-            {blueTeam.map((brawler) => (
-              <BrawlerCard
-                key={brawler.name}
-                brawler={brawler}
-              />
+                <img src={map.image} alt="" />
+                <span>{map.name}</span>
+                <small>{map.mode}</small>
+              </button>
             ))}
           </div>
         </div>
 
-        <div className="card">
-          <h2>Red Team</h2>
-
-          <div className="team-display">
-            {redTeam.map((brawler) => (
+        <div className="panel brawler-picker">
+          <div className="panel-heading">
+            <h2>Brawlers</h2>
+            <span>{filteredBrawlers.length}</span>
+          </div>
+          <div className="brawler-grid">
+            {filteredBrawlers.map((brawler) => (
               <BrawlerCard
-                key={brawler.name}
                 brawler={brawler}
+                disabled={phase === "complete" || usedNames.has(brawler.name)}
+                key={brawler.name}
+                onClick={() => selectBrawler(brawler)}
               />
             ))}
           </div>
         </div>
-
-        <div className="card">
-          <h2>Bans</h2>
-
-          <div className="team-display">
-            {bans.map((brawler) => (
-              <BrawlerCard
-                key={brawler.name}
-                brawler={brawler}
-              />
-            ))}
-          </div>
-        </div>
-
-        
-      </div>
-    </div>
+      </section>
+    </main>
   )
 }
 

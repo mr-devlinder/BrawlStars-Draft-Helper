@@ -1,19 +1,29 @@
 import type { Brawler } from "../data/brawlers"
 
 type Props = {
-    brawler: Brawler
-    onClick?: () => void
+  brawler: Brawler
+  onClick?: () => void
+  disabled?: boolean
+  compact?: boolean
 }
 
-export default function BrawlerCard({ brawler, onClick }: Props) {
-    return (
-        <div className="brawler-card" onClick={onClick}>
-            <div className={'rarity rarity-${brawler.rarity}'}>
-                <img src={brawler.image} alt={brawler.name} />
-            </div>
-
-            <p>{brawler.name}</p>
-        </div>
-    )
+export default function BrawlerCard({
+  brawler,
+  onClick,
+  disabled = false,
+  compact = false,
+}: Props) {
+  return (
+    <button
+      className={`brawler-card rarity rarity-${brawler.rarity}${compact ? " compact" : ""}`}
+      onClick={onClick}
+      disabled={disabled}
+      type="button"
+    >
+      <div className="brawler-portrait">
+        <img src={brawler.image} alt={brawler.name} />
+      </div>
+      <span>{brawler.name}</span>
+    </button>
+  )
 }
-
