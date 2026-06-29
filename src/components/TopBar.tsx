@@ -18,7 +18,6 @@ export default function TopBar({
   setMapSearch,
   brawlerSearch,
   setBrawlerSearch,
-  selectedMap,
   startingTeam,
   setStartingTeam,
   onUndo,
@@ -28,10 +27,12 @@ export default function TopBar({
   return (
     <header className="top-bar">
       <div className="brand">
-        <div className="brand-mark">BD</div>
+        <div className="brand-mark">
+          <img src="favicon.svg" alt="Brawl Stars Draft Logo" />
+        </div>
         <div>
           <h1>Brawl Draft</h1>
-          <span>{selectedMap ? selectedMap.mode + " - " + selectedMap.name : "Draft helper"}</span>
+          <span>Draft Helper</span>
         </div>
       </div>
 
@@ -61,7 +62,7 @@ export default function TopBar({
           onClick={() => setStartingTeam(startingTeam === "blue" ? "red" : "blue")}
           type="button"
         >
-          {startingTeam === "blue" ? "Blue starts" : "Red starts"}
+          {startingTeam === "blue" ? "Blue Starts" : "Red Starts"}
         </button>
         <button onClick={onUndo} disabled={!canUndo} type="button">
           Undo

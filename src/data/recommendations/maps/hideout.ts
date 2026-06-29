@@ -1,7 +1,7 @@
 import { createMapRecommendationProfile } from "../base"
 
 export default createMapRecommendationProfile({
-  mapName: "Dry Season",
+  mapName: "Hideout",
   mode: "Bounty",
   weights: {
     mapFit: 1.3,
@@ -56,7 +56,7 @@ export default createMapRecommendationProfile({
     },
 
     // =========================
-    // 6th PICKS (LAST PICK PRESSURE)
+    // LAST PICK
     // =========================
     Fang: {
       mapFit: 8.4,
@@ -94,7 +94,7 @@ export default createMapRecommendationProfile({
     },
 
     // =========================
-    // RANGE / LONG CONTROL
+    // RANGE
     // =========================
     Nani: {
       mapFit: 8.8,
@@ -146,7 +146,7 @@ export default createMapRecommendationProfile({
     },
 
     // =========================
-    // FLEX / MID CONTROL
+    // FLEX
     // =========================
     Charlie: {
       mapFit: 8.3,
@@ -187,11 +187,6 @@ export default createMapRecommendationProfile({
       mapFit: 8.5,
       stage: { early: 8.0, mid: 8.6, late: 8.7 },
       tags: ["flex", "damage"],
-    },
-    Sprout: {
-      mapFit: 8.3,
-      stage: { early: 8.1, mid: 8.3, late: 8.5 },
-      tags: ["flex", "control"],
     },
 
     // =========================
@@ -246,5 +241,5 @@ export default createMapRecommendationProfile({
   },
 
   notes:
-    "Dry Season is a long-range Bounty map. Prioritize sniper/range control first, then flex support, then blue-star/aggressive picks. Gene + R-T is a key control synergy, and Kit enables hyper-aggressive assassin dives with Mortis or Kaze.",
+    "Hideout is a long-range Bounty map. Prioritize one blue-star/aggressive pick, one long-range sniper or wall-breaker, and one flexible support. Gene + R-T is an excellent control combo, while Kit pairs exceptionally well with Mortis and Kaze for assassin compositions.",
 })
