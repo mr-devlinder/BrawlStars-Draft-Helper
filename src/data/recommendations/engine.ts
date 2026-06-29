@@ -1,0 +1,157 @@
+import { brawlers } from "../brawlers"
+import { getGlobalCounterScore } from "./globalCounters"
+import { getRecommendationProfile } from "./index"
+import type {
+  BrawlerMapData,
+  DraftState,
+  RecommendationBreakdown,
+  RecommendationResult,
+} from "./types"
+
+const rarityFallback: Record<string, number> = {
+  starter: 0.2,
+  rare: 0.3,
+  superRare: 0.42,
+  epic: 0.55,
+  mythic: 0.7,
+  legendary: 0.85,
+  ultraLegendary: 0.95,
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value))
+}
+
+function average(values: Array<number | undefined>) {
+  const filtered = values.filter((value): value is number => typeof value === "number")
+  if (filtered.length === 0) return 0
+  return filtered.reduce((sum, value) => sum + value, 0) / filtered.length
+}
+
+function blendStage(progress: number) {
+  const early = clamp(1 - progress * 1.5, 0, 1)
+  const mid = 1 - Math.abs(progress - 0.5) / 0.5
+  const late = clamp((progress - 0.45) * 2, 0, 1)
+
+  return { early, mid: clamp(mid, 0, 1), late }
+}
+
+function resolveCurrentTeam(state: DraftState) {
+  if (state.phase === "bans") {
+    return state.banIndex % 2 === 0 ? "blue" : "red"
+  }
+
+  return state.turnOrder[state.pickIndex] ?? null
+}
+
+function evaluateEntry(
+  entry: BrawlerMapData | undefined,
+  progress: number,
+  friendlyNames: string[],
+  enemyNames: string[],
+): RecommendationBreakdown {
+  const stageBlend = blendStage(progress)
+  const mapFit = entry?.mapFit ?? 0
+  const versatility = entry?.versatility ?? 0
+  const synergy = average(friendlyNames.map((name) => entry?.synergy?.[name]))
+  const mapCounter = average(enemyNames.map((name) => entry?.counters?.[name]))
+  const stage =
+    (entry?.stage?.early ?? 0) * stageBlend.early +
+    (entry?.stage?.mid ?? 0) * stageBlend.mid +
+    (entry?.stage?.late ?? 0) * stageBlend.late
+
+  return {
+    base: 0,
+    globalCounter: 0,
+    mapCounter,
+    mapFit,
+    versatility,
+    synergy,
+    stage,
+  }
+}
+
+export function getDraftRecommendations(state: DraftState): RecommendationResult[] {
+  const profile = getRecommendationProfile(state.selectedMap?.name)
+  const currentTeam = resolveCurrentTeam(state)
+  const friendlyTeam = currentTeam === "red" ? state.redTeam : state.blueTeam
+  const enemyTeam = currentTeam === "red" ? state.blueTeam : state.redTeam
+  const friendlyNames = friendlyTeam.map((brawler) => brawler.name)
+  const enemyNames = enemyTeam.map((brawler) => brawler.name)
+  const usedNames = new Set([
+    ...state.blueTeam,
+    ...state.redTeam,
+    ...state.blueBans,
+    ...state.redBans,
+  ].map((brawler) => brawler.name))
+
+  const pickProgress = state.pickIndex / 6
+  const revealProgress = enemyTeam.length / 3
+  const isBanPhase = state.phase === "bans"
+
+  const dynamicWeights = {
+    mapFit: clamp(1.25 - pickProgress * 0.45, 0.45, 1.25),
+    versatility: clamp(1.1 - pickProgress * 0.28, 0.45, 1.1),
+    globalCounter: clamp(0.25 + revealProgress * 1.15, 0.25, 1.4),
+    mapCounter: clamp(0.2 + revealProgress * 0.8, 0.2, 1.15),
+    synergy: clamp(0.35 + pickProgress * 0.9, 0.35, 1.25),
+    stage: isBanPhase ? 0.4 : 0.65,
+  }
+
+  const baseWeights = profile.weights ?? {}
+
+  return brawlers
+    .filter((brawler) => !usedNames.has(brawler.name))
+    .map((brawler) => {
+      const entry = profile.brawlers[brawler.name]
+      const breakdown = evaluateEntry(entry, pickProgress, friendlyNames, enemyNames)
+      const rarityBase = rarityFallback[brawler.rarity] ?? 0.25
+      const globalCounterBase = getGlobalCounterScore(brawler.name, enemyNames)
+
+      const baseScore = rarityBase
+      const mapFitScore =
+        (breakdown.mapFit * (baseWeights.mapFit ?? 1) * dynamicWeights.mapFit) +
+        (isBanPhase ? rarityBase * 0.1 : 0)
+      const versatilityScore =
+        ((entry?.versatility ?? rarityBase) * (baseWeights.versatility ?? 1) * dynamicWeights.versatility)
+      const globalCounterScore =
+        (globalCounterBase * (baseWeights.globalCounter ?? 1) * dynamicWeights.globalCounter)
+      const mapCounterScore =
+        (breakdown.mapCounter * (baseWeights.counter ?? 1) * dynamicWeights.mapCounter)
+      const synergyScore =
+        (breakdown.synergy * (baseWeights.synergy ?? 1) * dynamicWeights.synergy)
+      const stageScore =
+        (breakdown.stage * (baseWeights.stage ?? 1) * dynamicWeights.stage)
+
+      const score =
+        baseScore +
+        mapFitScore +
+        versatilityScore +
+        globalCounterScore +
+        mapCounterScore +
+        synergyScore +
+        stageScore
+      const reasons = [
+        baseScore !== 0 ? "Base Value" : "",
+        mapFitScore !== 0 ? "Map Fit" : "",
+        globalCounterScore !== 0 ? "Global Counter" : "",
+        mapCounterScore !== 0 ? "Map Counter" : "",
+        synergyScore !== 0 ? "Synergy" : "",
+        stageScore !== 0 ? "Draft Phase" : "",
+      ].filter(Boolean)
+
+      return {
+        brawler,
+        score,
+        breakdown: {
+          ...breakdown,
+          base: baseScore,
+          globalCounter: globalCounterScore,
+          mapCounter: mapCounterScore,
+          versatility: (entry?.versatility ?? rarityBase),
+        },
+        reasons,
+      }
+    })
+    .sort((left, right) => right.score - left.score)
+}

@@ -80,7 +80,7 @@ h1 {
 .brand span,
 .eyebrow,
 .team-heading span,
-.map-card span,
+.recommendation-card span,
 .map-option small,
 .panel-heading span {
   color: #aab1c3;
@@ -177,7 +177,7 @@ input:focus {
 .draft-status > div,
 .panel,
 .team-column,
-.map-card {
+.recommendation-card {
   border: 1px solid #2d3342;
   border-radius: 8px;
   background: rgba(18, 21, 29, 0.92);
@@ -269,6 +269,27 @@ input:focus {
   object-fit: contain;
 }
 
+.ban-wrapper {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
+.ban-wrapper img {
+  width: 58px;
+  height: 58px;
+  object-fit: contain;
+  filter: grayscale(80%) brightness(0.8);
+}
+
+/* crossout overlay */
+.ban-cross {
+  position: absolute;
+  inset: 0;
+  background: url("/other/gray-line.png") center/contain no-repeat;
+  pointer-events: none;
+}
+
 .ban-slot span,
 .empty-slot {
   color: #aab1c3;
@@ -284,25 +305,11 @@ input:focus {
   font-weight: 800;
 }
 
-.map-card {
+.recommendation-card {
   padding: 14px;
   display: grid;
-  align-content: center;
-  justify-items: center;
-  gap: 8px;
-  text-align: center;
-}
-
-.map-card img {
-  width: min(100%, 240px);
-  aspect-ratio: 1 / 1;
-  object-fit: cover;
-  border-radius: 8px;
-  border: 1px solid #363d4e;
-}
-
-.map-card strong {
-  font-size: 20px;
+  align-content: start;
+  gap: 12px;
 }
 
 .picker-layout {
@@ -314,6 +321,78 @@ input:focus {
 .panel {
   padding: 14px;
   min-height: 0;
+}
+
+.recommendation-list {
+  display: grid;
+  gap: 10px;
+}
+
+.recommendation-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 160px;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid #2d3342;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.recommendation-row.compact {
+  padding: 8px 10px;
+}
+
+.recommendation-list.compact {
+  margin-top: 0;
+}
+
+.recommendation-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.recommendation-main img {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+  flex: 0 0 auto;
+}
+
+.recommendation-main strong,
+.recommendation-score strong {
+  display: block;
+  font-size: 14px;
+}
+
+.recommendation-main span {
+  display: block;
+  color: #aab1c3;
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.recommendation-score {
+  display: grid;
+  justify-items: end;
+  gap: 6px;
+}
+
+.score-bar {
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.score-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #2f8dff, #ffd54a);
 }
 
 .map-list {
@@ -415,7 +494,7 @@ input:focus {
 }
 
 .rarity-starter {
-  border-color: #8892a6;
+  border-color: #84c8da;
 }
 
 .rarity-rare {
@@ -439,7 +518,7 @@ input:focus {
 }
 
 .rarity-ultraLegendary {
-  border-color: #34e7d6;
+  border-image: linear-gradient(to right, #97039c, #a70b85, #d33024, #c57e21, #d4bd37, #90e47f, #84ecc1) 1;
 }
 
 @media (max-width: 980px) {

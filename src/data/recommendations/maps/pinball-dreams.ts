@@ -1,0 +1,17 @@
+﻿import { createMapRecommendationProfile } from "../base"
+
+export default createMapRecommendationProfile({
+  mapName: "Pinball Dreams",
+  mode: "Brawl Ball",
+  weights: {
+    // mapFit:
+    // versatility:
+    // synergy:
+    // counter:
+    // stage:
+  },
+  brawlers: {
+    // Fill in map-specific brawler scores here.
+  },
+  notes: "",
+})

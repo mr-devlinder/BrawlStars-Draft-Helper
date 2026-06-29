@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react"
 import { maps, type GameMap } from "./data/maps"
 import { brawlers, type Brawler } from "./data/brawlers"
+import { getDraftRecommendations } from "./data/recommendations/engine"
+import type { DraftState } from "./data/recommendations/types"
 import BrawlerCard from "./components/BrawlerCard"
 import DraftBoard from "./components/DraftBoard"
 import TopBar from "./components/TopBar"
@@ -103,7 +105,35 @@ function App() {
   const phaseLabel = phase === "complete" ? "Draft complete" : (currentTeam === "blue" ? "Blue" : "Red") + " " + (phase === "bans" ? "ban" : "pick")
   const stepCount = phase === "bans" ? banActions.length + 1 : pickActions.length + 1
   const totalCount = 6
+  const recommendationPhase = phase === "complete" ? "picks" : phase
+  const draftState: DraftState = {
+    selectedMap,
+    phase: recommendationPhase,
+    startingTeam,
+    turnOrder: draftOrder,
+    banIndex: banActions.length,
+    pickIndex: pickActions.length,
+    blueTeam,
+    redTeam,
+    blueBans,
+    redBans,
+  }
 
+  const recommendations = useMemo(
+    () => getDraftRecommendations(draftState),
+    [
+      draftState.selectedMap,
+      draftState.phase,
+      draftState.startingTeam,
+      draftState.banIndex,
+      draftState.pickIndex,
+      draftState.turnOrder,
+      draftState.blueTeam,
+      draftState.redTeam,
+      draftState.blueBans,
+      draftState.redBans,
+    ],
+  )
   return (
     <main className="app">
       <TopBar
@@ -139,7 +169,7 @@ function App() {
         redTeam={redTeam}
         blueBans={blueBans}
         redBans={redBans}
-        selectedMap={selectedMap}
+        recommendations={recommendations}
         currentTeam={currentTeam}
         phase={phase}
       />
@@ -183,6 +213,7 @@ function App() {
           </div>
         </div>
       </section>
+
     </main>
   )
 }

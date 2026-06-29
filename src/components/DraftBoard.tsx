@@ -1,5 +1,5 @@
 import type { Brawler } from "../data/brawlers"
-import type { GameMap } from "../data/maps"
+import type { RecommendationResult } from "../data/recommendations/types"
 
 import BanSlot from "./BanSlot"
 import BrawlerCard from "./BrawlerCard"
@@ -9,7 +9,7 @@ type Props = {
   redTeam: Brawler[]
   blueBans: Brawler[]
   redBans: Brawler[]
-  selectedMap: GameMap | null
+  recommendations: RecommendationResult[]
   currentTeam: "blue" | "red" | null
   phase: "bans" | "picks" | "complete"
 }
@@ -27,10 +27,12 @@ export default function DraftBoard({
   redTeam,
   blueBans,
   redBans,
-  selectedMap,
+  recommendations,
   currentTeam,
   phase,
 }: Props) {
+  const topScore = recommendations[0]?.score ?? 1
+
   return (
     <section className="draft-board">
       <div className={"team-column blue" + (currentTeam === "blue" ? " active" : "")}>
@@ -50,16 +52,32 @@ export default function DraftBoard({
         </div>
       </div>
 
-      <div className="map-card">
-        {selectedMap ? (
-          <>
-            <img src={selectedMap.image} alt={selectedMap.name} />
-            <strong>{selectedMap.name}</strong>
-            <span>{selectedMap.mode}</span>
-          </>
-        ) : (
-          <strong>No map selected</strong>
-        )}
+      <div className="recommendation-card">
+        <div className="team-heading">
+          <h2>{phase === "bans" ? "Ban priorities" : "Pick recommendations"}</h2>
+          <span>{currentTeam ? `${currentTeam === "blue" ? "Blue" : "Red"} turn` : "No active turn"}</span>
+        </div>
+
+        <div className="recommendation-list compact">
+          {recommendations.slice(0, 5).map((result) => (
+            <article className="recommendation-row compact" key={result.brawler.name}>
+              <div className="recommendation-main">
+                <img src={result.brawler.image} alt={result.brawler.name} />
+                <div>
+                  <strong>{result.brawler.name}</strong>
+                  <span>{result.reasons.length ? result.reasons.join(" · ") : "baseline value"}</span>
+                </div>
+              </div>
+
+              <div className="recommendation-score">
+                <strong>{result.score.toFixed(2)}</strong>
+                <div className="score-bar">
+                  <span style={{ width: `${Math.max(8, (result.score / topScore) * 100)}%` }} />
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
       </div>
 
       <div className={"team-column red" + (currentTeam === "red" ? " active" : "")}>
