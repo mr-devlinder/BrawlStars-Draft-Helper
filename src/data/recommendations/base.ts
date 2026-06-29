@@ -4,6 +4,7 @@ const defaultWeights: MapRecommendationWeights = {
   mapFit: 1,
   versatility: 0.85,
   globalCounter: 1,
+  globalFavor: 1,
   synergy: 0.95,
   counter: 1.1,
   stage: 0.65,

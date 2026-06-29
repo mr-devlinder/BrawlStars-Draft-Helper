@@ -1,5 +1,5 @@
 import { brawlers } from "../brawlers"
-import { getGlobalCounterScore } from "./globalCounters"
+import { getGlobalCounterScore, getGlobalFavorScore } from "./globalCounters"
 import { getRecommendationProfile } from "./index"
 import type {
   BrawlerMapData,
@@ -63,6 +63,7 @@ function evaluateEntry(
   return {
     base: 0,
     globalCounter: 0,
+    globalFavor: 0,
     mapCounter,
     mapFit,
     versatility,
@@ -93,6 +94,7 @@ export function getDraftRecommendations(state: DraftState): RecommendationResult
     mapFit: clamp(1.25 - pickProgress * 0.45, 0.45, 1.25),
     versatility: clamp(1.1 - pickProgress * 0.28, 0.45, 1.1),
     globalCounter: clamp(0.25 + revealProgress * 1.15, 0.25, 1.4),
+    globalFavor: clamp(0.2 + revealProgress * 1.0, 0.2, 1.25),
     mapCounter: clamp(0.2 + revealProgress * 0.8, 0.2, 1.15),
     synergy: clamp(0.35 + pickProgress * 0.9, 0.35, 1.25),
     stage: isBanPhase ? 0.4 : 0.65,
@@ -107,6 +109,7 @@ export function getDraftRecommendations(state: DraftState): RecommendationResult
       const breakdown = evaluateEntry(entry, pickProgress, friendlyNames, enemyNames)
       const rarityBase = rarityFallback[brawler.rarity] ?? 0.25
       const globalCounterBase = getGlobalCounterScore(brawler.name, enemyNames)
+      const globalFavorBase = getGlobalFavorScore(brawler.name, enemyNames)
 
       const baseScore = rarityBase
       const mapFitScore =
@@ -116,6 +119,8 @@ export function getDraftRecommendations(state: DraftState): RecommendationResult
         ((entry?.versatility ?? rarityBase) * (baseWeights.versatility ?? 1) * dynamicWeights.versatility)
       const globalCounterScore =
         (globalCounterBase * (baseWeights.globalCounter ?? 1) * dynamicWeights.globalCounter)
+      const globalFavorScore =
+        (globalFavorBase * (baseWeights.globalFavor ?? 1) * dynamicWeights.globalFavor)
       const mapCounterScore =
         (breakdown.mapCounter * (baseWeights.counter ?? 1) * dynamicWeights.mapCounter)
       const synergyScore =
@@ -128,6 +133,7 @@ export function getDraftRecommendations(state: DraftState): RecommendationResult
         mapFitScore +
         versatilityScore +
         globalCounterScore +
+        globalFavorScore +
         mapCounterScore +
         synergyScore +
         stageScore
@@ -135,6 +141,7 @@ export function getDraftRecommendations(state: DraftState): RecommendationResult
         baseScore !== 0 ? "Base Value" : "",
         mapFitScore !== 0 ? "Map Fit" : "",
         globalCounterScore !== 0 ? "Global Counter" : "",
+        globalFavorScore !== 0 ? "Global Favor" : "",
         mapCounterScore !== 0 ? "Map Counter" : "",
         synergyScore !== 0 ? "Synergy" : "",
         stageScore !== 0 ? "Draft Phase" : "",
@@ -147,6 +154,7 @@ export function getDraftRecommendations(state: DraftState): RecommendationResult
           ...breakdown,
           base: baseScore,
           globalCounter: globalCounterScore,
+          globalFavor: globalFavorScore,
           mapCounter: mapCounterScore,
           versatility: (entry?.versatility ?? rarityBase),
         },

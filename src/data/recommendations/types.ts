@@ -24,6 +24,7 @@ export type MapRecommendationWeights = {
   mapFit: number
   versatility: number
   globalCounter: number
+  globalFavor: number
   synergy: number
   counter: number
   stage: number
@@ -53,6 +54,7 @@ export type DraftState = {
 export type RecommendationBreakdown = {
   base: number
   globalCounter: number
+  globalFavor: number
   mapCounter: number
   mapFit: number
   versatility: number
