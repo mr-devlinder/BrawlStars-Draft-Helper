@@ -11,6 +11,12 @@ export default createMapRecommendationProfile({
     stage: 0.8,
   },
 
+  composition: [
+    { tag: "agro", count: 1, weight: 1.2 },
+    { tag: "range", count: 1, weight: 1.1 },
+    { tag: "flex", count: 1, weight: 1.0 },
+  ],
+
   brawlers: {
     // =========================
     // 1st PICKS (PRIORITY CORE)
@@ -40,7 +46,7 @@ export default createMapRecommendationProfile({
         "R-T": 8,
       },
       stage: { early: 9.1, mid: 9.0, late: 8.8 },
-      tags: ["1st-pick", "support"],
+      tags: ["1st-pick", "flex"],
     },
     Pierce: {
       mapFit: 9.1,
@@ -99,17 +105,17 @@ export default createMapRecommendationProfile({
     Nani: {
       mapFit: 8.8,
       stage: { early: 9.0, mid: 8.8, late: 8.6 },
-      tags: ["range", "sniper"],
+      tags: ["range"],
     },
     Belle: {
       mapFit: 8.9,
       stage: { early: 8.9, mid: 8.8, late: 8.7 },
-      tags: ["range", "sniper"],
+      tags: ["range"],
     },
     Byron: {
       mapFit: 8.7,
       stage: { early: 8.8, mid: 8.7, late: 8.6 },
-      tags: ["range", "support"],
+      tags: ["range", "flex"],
     },
     "R-T": {
       mapFit: 8.9,
@@ -117,17 +123,17 @@ export default createMapRecommendationProfile({
         Gene: 8,
       },
       stage: { early: 8.8, mid: 8.9, late: 8.8 },
-      tags: ["range", "control"],
+      tags: ["range", "flex"],
     },
     Gus: {
       mapFit: 8.4,
       stage: { early: 8.2, mid: 8.4, late: 8.5 },
-      tags: ["range", "support"],
+      tags: ["range", "flex"],
     },
     Angelo: {
       mapFit: 8.9,
       stage: { early: 9.0, mid: 8.9, late: 8.7 },
-      tags: ["range", "sniper"],
+      tags: ["range"],
     },
     Brock: {
       mapFit: 8.8,
@@ -137,12 +143,12 @@ export default createMapRecommendationProfile({
     Mandy: {
       mapFit: 8.7,
       stage: { early: 8.8, mid: 8.7, late: 8.6 },
-      tags: ["range", "sniper"],
+      tags: ["range"],
     },
     Piper: {
       mapFit: 8.8,
       stage: { early: 8.9, mid: 8.8, late: 8.7 },
-      tags: ["range", "sniper"],
+      tags: ["range"],
     },
 
     // =========================
@@ -151,22 +157,22 @@ export default createMapRecommendationProfile({
     Charlie: {
       mapFit: 8.3,
       stage: { early: 8.0, mid: 8.3, late: 8.6 },
-      tags: ["flex", "control"],
+      tags: ["flex"],
     },
     Crow: {
       mapFit: 8.6,
       stage: { early: 8.8, mid: 8.7, late: 8.5 },
-      tags: ["flex", "pressure"],
+      tags: ["flex", "agro"],
     },
     Gray: {
       mapFit: 8.2,
       stage: { early: 8.0, mid: 8.2, late: 8.4 },
-      tags: ["flex", "support"],
+      tags: ["flex"],
     },
     Meeple: {
       mapFit: 8.3,
       stage: { early: 8.2, mid: 8.3, late: 8.4 },
-      tags: ["flex", "support"],
+      tags: ["flex"],
     },
     Glowy: {
       mapFit: 8.0,
@@ -176,7 +182,7 @@ export default createMapRecommendationProfile({
     Squeak: {
       mapFit: 8.4,
       stage: { early: 8.2, mid: 8.4, late: 8.6 },
-      tags: ["flex", "control"],
+      tags: ["flex", "range"],
     },
     Ziggy: {
       mapFit: 8.1,
@@ -186,7 +192,7 @@ export default createMapRecommendationProfile({
     "8-Bit": {
       mapFit: 8.5,
       stage: { early: 8.0, mid: 8.6, late: 8.7 },
-      tags: ["flex", "damage"],
+      tags: ["flex", "range"],
     },
 
     // =========================
@@ -236,10 +242,10 @@ export default createMapRecommendationProfile({
     Max: {
       mapFit: 8.6,
       stage: { early: 8.0, mid: 8.5, late: 8.7 },
-      tags: ["agro", "support"],
+      tags: ["agro", "flex"],
     },
   },
 
   notes:
-    "Hideout is a long-range Bounty map. Prioritize one blue-star/aggressive pick, one long-range sniper or wall-breaker, and one flexible support. Gene + R-T is an excellent control combo, while Kit pairs exceptionally well with Mortis and Kaze for assassin compositions.",
+    "Hideout is a long-range Bounty map. Prioritize one blue-star/aggressive pick, one long-range sniper or wall-breaker, and one flexible flex. Gene + R-T is an excellent flex combo, while Kit pairs exceptionally well with Mortis and Kaze for assassin compositions.",
 })

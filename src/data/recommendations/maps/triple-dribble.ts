@@ -11,6 +11,12 @@ export default createMapRecommendationProfile({
     stage: 0.8,
   },
 
+  composition: [
+    { tag: "tank-counter", count: 1, weight: 1.3 },
+    { tag: "agro", count: 1, weight: 1.2 },
+    { tag: "flex", count: 1, weight: 1.2 },
+  ],
+
   brawlers: {
     // =========================
     // 1st PICKS
@@ -47,7 +53,7 @@ export default createMapRecommendationProfile({
       mapFit: 9.2,
       versatility: 8.9,
       stage: { early: 9.2, mid: 8.9, late: 8.5 },
-      tags: ["1st-pick", "pressure"],
+      tags: ["1st-pick", "agro"],
     },
     Chester: {
       mapFit: 9.2,
@@ -62,7 +68,7 @@ export default createMapRecommendationProfile({
         Frank: 8,
       },
       stage: { early: 9.1, mid: 8.8, late: 8.8 },
-      tags: ["1st-pick", "pressure", "flex"],
+      tags: ["1st-pick", "agro", "flex"],
     },
     Otis: {
       mapFit: 9.1,
@@ -100,7 +106,7 @@ export default createMapRecommendationProfile({
         Otis: 1,
       },
       stage: { early: 5.8, mid: 7.2, late: 9.6 },
-      tags: ["last-pick", "tank"],
+      tags: ["last-pick", "agro"],
     },
     Edgar: {
       mapFit: 8.7,
@@ -110,7 +116,7 @@ export default createMapRecommendationProfile({
     Shade: {
       mapFit: 8.7,
       stage: { early: 6.2, mid: 7.9, late: 9.2 },
-      tags: ["last-pick", "pressure"],
+      tags: ["last-pick", "agro"],
     },
     Mortis: {
       mapFit: 8.6,
@@ -128,7 +134,7 @@ export default createMapRecommendationProfile({
         Frank: 7,
       },
       stage: { early: 7.5, mid: 8.4, late: 8.8 },
-      tags: ["tank-counter", "mid"],
+      tags: ["tank-counter", "flex"],
     },
     Griff: {
       mapFit: 8.6,
@@ -141,7 +147,7 @@ export default createMapRecommendationProfile({
         Frank: 8,
       },
       stage: { early: 7.8, mid: 8.6, late: 8.8 },
-      tags: ["tank-counter", "mid"],
+      tags: ["tank-counter", "flex"],
     },
     Clancy: {
       mapFit: 8.5,
@@ -150,7 +156,7 @@ export default createMapRecommendationProfile({
         Frank: 7,
       },
       stage: { early: 7.6, mid: 8.5, late: 8.8 },
-      tags: ["tank-counter", "mid"],
+      tags: ["tank-counter", "flex"],
     },
     Emz: {
       mapFit: 8.5,
@@ -159,7 +165,7 @@ export default createMapRecommendationProfile({
         Frank: 8,
       },
       stage: { early: 7.6, mid: 8.5, late: 8.8 },
-      tags: ["tank-counter", "mid"],
+      tags: ["tank-counter", "flex"],
     },
     Cordelius: {
       mapFit: 8.4,
@@ -168,7 +174,7 @@ export default createMapRecommendationProfile({
         Frank: 7,
       },
       stage: { early: 7.5, mid: 8.4, late: 8.7 },
-      tags: ["tank-counter", "pressure"],
+      tags: ["tank-counter", "agro"],
     },
     Bea: {
       mapFit: 8.5,
@@ -177,7 +183,7 @@ export default createMapRecommendationProfile({
         Frank: 8,
       },
       stage: { early: 8.0, mid: 8.5, late: 8.7 },
-      tags: ["tank-counter", "range"],
+      tags: ["tank-counter", "flex"],
     },
 
     // =========================
@@ -191,7 +197,7 @@ export default createMapRecommendationProfile({
         Otis: 8,
       },
       stage: { early: 8.6, mid: 8.6, late: 8.3 },
-      tags: ["flex", "support"],
+      tags: ["flex"],
     },
     Willow: {
       mapFit: 8.6,
@@ -201,31 +207,31 @@ export default createMapRecommendationProfile({
         Otis: 8,
       },
       stage: { early: 8.5, mid: 8.5, late: 8.3 },
-      tags: ["flex", "control"],
+      tags: ["flex"],
     },
     Ruffs: {
       mapFit: 8.5,
       versatility: 8.6,
       stage: { early: 8.5, mid: 8.5, late: 8.3 },
-      tags: ["flex", "support"],
+      tags: ["flex"],
     },
     Stu: {
       mapFit: 8.5,
       versatility: 8.5,
       stage: { early: 8.5, mid: 8.4, late: 8.3 },
-      tags: ["flex", "pressure"],
+      tags: ["flex", "agro"],
     },
     Leon: {
       mapFit: 8.8,
       versatility: 8.8,
       stage: { early: 8.9, mid: 8.7, late: 8.5 },
-      tags: ["flex", "pressure"],
+      tags: ["flex", "agro"],
     },
     Charlie: {
       mapFit: 8.5,
       versatility: 8.5,
       stage: { early: 8.3, mid: 8.5, late: 8.7 },
-      tags: ["flex", "control"],
+      tags: ["flex"],
     },
     Pierce: {
       mapFit: 8.8,
@@ -255,7 +261,7 @@ export default createMapRecommendationProfile({
       mapFit: 8.5,
       versatility: 8.5,
       stage: { early: 8.4, mid: 8.5, late: 8.5 },
-      tags: ["flex", "damage"],
+      tags: ["flex"],
     },
 
     // =========================
@@ -299,31 +305,31 @@ export default createMapRecommendationProfile({
       mapFit: 8.0,
       versatility: 8.3,
       stage: { early: 7.8, mid: 8.0, late: 8.1 },
-      tags: ["safe-pick"],
+      tags: ["flex"],
     },
     Barley: {
       mapFit: 8.2,
       versatility: 8.3,
       stage: { early: 8.1, mid: 8.2, late: 8.2 },
-      tags: ["thrower"],
+      tags: ["flex"],
     },
     "Larry & Lawrie": {
       mapFit: 8.3,
       versatility: 8.4,
       stage: { early: 8.2, mid: 8.3, late: 8.3 },
-      tags: ["thrower"],
+      tags: ["flex"],
     },
     Penny: {
       mapFit: 8.2,
       versatility: 8.3,
       stage: { early: 8.0, mid: 8.2, late: 8.3 },
-      tags: ["safe-pick"],
+      tags: ["flex"],
     },
     Glowy: {
       mapFit: 8.1,
       versatility: 8.2,
       stage: { early: 8.0, mid: 8.1, late: 8.2 },
-      tags: ["safe-pick"],
+      tags: ["flex"],
     },
   },
 

@@ -11,6 +11,12 @@ export default createMapRecommendationProfile({
     stage: 0.8,
   },
 
+  composition: [
+    { tag: "agro", count: 1, weight: 1.2 },
+    { tag: "tank-counter", count: 1, weight: 1.1 },
+    { tag: "flex", count: 1, weight: 1.1 },
+  ],
+
   brawlers: {
     // =========================
     // 1st PICKS
@@ -19,7 +25,7 @@ export default createMapRecommendationProfile({
       mapFit: 9.5,
       versatility: 9.2,
       stage: { early: 9.4, mid: 9.2, late: 8.9 },
-      tags: ["1st-pick", "support"],
+      tags: ["1st-pick", "flex"],
     },
     Colette: {
       mapFit: 9.4,
@@ -64,7 +70,7 @@ export default createMapRecommendationProfile({
     Shade: {
       mapFit: 8.6,
       stage: { early: 6.3, mid: 7.9, late: 9.2 },
-      tags: ["last-pick", "pressure"],
+      tags: ["last-pick", "agro"],
     },
     Edgar: {
       mapFit: 8.4,
@@ -107,7 +113,7 @@ export default createMapRecommendationProfile({
         Buster: 8,
       },
       stage: { early: 8.9, mid: 8.8, late: 8.5 },
-      tags: ["tank-counter", "pressure"],
+      tags: ["tank-counter", "agro"],
     },
     Charlie: {
       mapFit: 8.6,
@@ -115,7 +121,7 @@ export default createMapRecommendationProfile({
         Buster: 8,
       },
       stage: { early: 8.3, mid: 8.6, late: 8.8 },
-      tags: ["tank-counter", "control"],
+      tags: ["tank-counter", "flex"],
     },
     Chester: {
       mapFit: 8.5,
@@ -123,7 +129,7 @@ export default createMapRecommendationProfile({
         Buster: 8,
       },
       stage: { early: 8.4, mid: 8.5, late: 8.7 },
-      tags: ["tank-counter", "pressure"],
+      tags: ["tank-counter", "agro"],
     },
     Emz: {
       mapFit: 8.5,
@@ -131,7 +137,7 @@ export default createMapRecommendationProfile({
         Buster: 8,
       },
       stage: { early: 8.0, mid: 8.5, late: 8.9 },
-      tags: ["tank-counter", "control"],
+      tags: ["tank-counter", "flex"],
     },
 
     // =========================
@@ -147,19 +153,19 @@ export default createMapRecommendationProfile({
       mapFit: 8.4,
       versatility: 8.5,
       stage: { early: 8.2, mid: 8.4, late: 8.5 },
-      tags: ["flex", "support"],
+      tags: ["flex"],
     },
     Squeak: {
       mapFit: 8.4,
       versatility: 8.4,
       stage: { early: 8.2, mid: 8.4, late: 8.6 },
-      tags: ["flex", "control"],
+      tags: ["flex"],
     },
     Meeple: {
       mapFit: 8.4,
       versatility: 8.5,
       stage: { early: 8.2, mid: 8.4, late: 8.5 },
-      tags: ["flex", "support"],
+      tags: ["flex"],
     },
     Glowy: {
       mapFit: 8.2,
@@ -171,19 +177,19 @@ export default createMapRecommendationProfile({
       mapFit: 8.7,
       versatility: 8.7,
       stage: { early: 8.8, mid: 8.7, late: 8.6 },
-      tags: ["range", "sniper"],
+      tags: ["range"],
     },
     Byron: {
       mapFit: 8.6,
       versatility: 8.6,
       stage: { early: 8.7, mid: 8.6, late: 8.5 },
-      tags: ["range", "support"],
+      tags: ["range", "flex"],
     },
     Ruffs: {
       mapFit: 8.4,
       versatility: 8.6,
       stage: { early: 8.5, mid: 8.5, late: 8.4 },
-      tags: ["flex", "support"],
+      tags: ["flex"],
     },
 
     // =========================
@@ -238,7 +244,7 @@ export default createMapRecommendationProfile({
     Buster: {
       mapFit: 8.5,
       stage: { early: 7.8, mid: 8.5, late: 8.7 },
-      tags: ["agro", "tank"],
+      tags: ["agro", "flex"],
     },
   },
 

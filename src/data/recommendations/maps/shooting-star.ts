@@ -11,6 +11,12 @@ export default createMapRecommendationProfile({
     stage: 0.8,
   },
 
+  composition: [
+    { tag: "agro", count: 1, weight: 1.2 },
+    { tag: "range", count: 1, weight: 1.1 },
+    { tag: "flex", count: 1, weight: 1.1 },
+  ],
+
   brawlers: {
     // =========================
     // 1st PICKS
@@ -28,7 +34,7 @@ export default createMapRecommendationProfile({
         "R-T": 8,
       },
       stage: { early: 9.3, mid: 9.2, late: 8.9 },
-      tags: ["1st-pick", "support"],
+      tags: ["1st-pick", "flex"],
     },
     Pierce: {
       mapFit: 9.4,
@@ -40,7 +46,7 @@ export default createMapRecommendationProfile({
       mapFit: 9.3,
       versatility: 8.9,
       stage: { early: 9.4, mid: 9.1, late: 8.8 },
-      tags: ["1st-pick", "sniper"],
+      tags: ["1st-pick", "range"],
     },
     Najia: {
       mapFit: 9.2,
@@ -103,13 +109,13 @@ export default createMapRecommendationProfile({
       mapFit: 8.9,
       versatility: 8.8,
       stage: { early: 9.0, mid: 8.9, late: 8.8 },
-      tags: ["range", "sniper"],
+      tags: ["range"],
     },
     Byron: {
       mapFit: 8.8,
       versatility: 8.7,
       stage: { early: 8.9, mid: 8.8, late: 8.6 },
-      tags: ["range", "support"],
+      tags: ["range", "flex"],
     },
     "R-T": {
       mapFit: 8.8,
@@ -117,19 +123,19 @@ export default createMapRecommendationProfile({
         Gene: 8,
       },
       stage: { early: 8.9, mid: 8.9, late: 8.8 },
-      tags: ["range", "control"],
+      tags: ["range", "flex"],
     },
     Gus: {
       mapFit: 8.5,
       versatility: 8.5,
       stage: { early: 8.5, mid: 8.5, late: 8.6 },
-      tags: ["range", "support"],
+      tags: ["range", "flex"],
     },
     Angelo: {
       mapFit: 8.9,
       versatility: 8.8,
       stage: { early: 9.1, mid: 8.9, late: 8.8 },
-      tags: ["range", "sniper"],
+      tags: ["range"],
     },
     Brock: {
       mapFit: 8.8,
@@ -141,13 +147,13 @@ export default createMapRecommendationProfile({
       mapFit: 8.8,
       versatility: 8.8,
       stage: { early: 8.9, mid: 8.8, late: 8.7 },
-      tags: ["range", "sniper"],
+      tags: ["range"],
     },
     Piper: {
       mapFit: 8.9,
       versatility: 8.8,
       stage: { early: 9.0, mid: 8.9, late: 8.8 },
-      tags: ["range", "sniper"],
+      tags: ["range"],
     },
 
     // =========================
@@ -157,25 +163,25 @@ export default createMapRecommendationProfile({
       mapFit: 8.4,
       versatility: 8.5,
       stage: { early: 8.2, mid: 8.4, late: 8.6 },
-      tags: ["flex", "control"],
+      tags: ["flex"],
     },
     Crow: {
       mapFit: 8.7,
       versatility: 8.8,
       stage: { early: 8.9, mid: 8.8, late: 8.6 },
-      tags: ["flex", "pressure"],
+      tags: ["flex", "agro"],
     },
     Gray: {
       mapFit: 8.4,
       versatility: 8.5,
       stage: { early: 8.2, mid: 8.4, late: 8.5 },
-      tags: ["flex", "support"],
+      tags: ["flex"],
     },
     Meeple: {
       mapFit: 8.4,
       versatility: 8.5,
       stage: { early: 8.2, mid: 8.4, late: 8.5 },
-      tags: ["flex", "support"],
+      tags: ["flex"],
     },
     Glowy: {
       mapFit: 8.2,
@@ -187,7 +193,7 @@ export default createMapRecommendationProfile({
       mapFit: 8.5,
       versatility: 8.4,
       stage: { early: 8.3, mid: 8.5, late: 8.7 },
-      tags: ["flex", "control"],
+      tags: ["flex"],
     },
     Ziggy: {
       mapFit: 8.2,
@@ -199,13 +205,13 @@ export default createMapRecommendationProfile({
       mapFit: 8.5,
       versatility: 8.6,
       stage: { early: 8.1, mid: 8.6, late: 8.8 },
-      tags: ["flex", "damage"],
+      tags: ["flex", "range"],
     },
     Sprout: {
       mapFit: 8.4,
       versatility: 8.5,
       stage: { early: 8.2, mid: 8.4, late: 8.6 },
-      tags: ["flex", "control"],
+      tags: ["flex"],
     },
 
     // =========================
@@ -256,7 +262,7 @@ export default createMapRecommendationProfile({
       mapFit: 8.6,
       versatility: 8.7,
       stage: { early: 8.2, mid: 8.6, late: 8.8 },
-      tags: ["agro", "support"],
+      tags: ["agro", "flex"],
     },
   },
 

@@ -11,6 +11,12 @@ export default createMapRecommendationProfile({
     stage: 0.8,
   },
 
+  composition: [
+    { tag: "tank-counter", count: 1, weight: 1.3 },
+    { tag: "agro", count: 1, weight: 1.2 },
+    { tag: "gem-carrier", count: 1, weight: 1.3 },
+  ],
+  
   brawlers: {
     // =========================
     // 1st PICKS

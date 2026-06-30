@@ -11,6 +11,12 @@ export default createMapRecommendationProfile({
     stage: 0.8,
   },
 
+  composition: [
+    { tag: "tank-counter", count: 1, weight: 1.3 },
+    { tag: "agro", count: 1, weight: 1.2 },
+    { tag: "gem-carrier", count: 1, weight: 1.3 },
+  ],
+
   brawlers: {
     // =========================
     // 1st PICKS
@@ -19,7 +25,7 @@ export default createMapRecommendationProfile({
       mapFit: 9.6,
       versatility: 9.0,
       stage: { early: 9.7, mid: 8.9, late: 8.1 },
-      tags: ["1st-pick", "flex"],
+      tags: ["1st-pick", "agro"],
     },
     Colette: {
       mapFit: 9.5,
@@ -95,7 +101,7 @@ export default createMapRecommendationProfile({
         Otis: 1,
       },
       stage: { early: 5.8, mid: 7.2, late: 9.6 },
-      tags: ["last-pick", "tank"],
+      tags: ["last-pick", "agro"],
     },
     Alli: {
       mapFit: 8.6,
@@ -111,7 +117,7 @@ export default createMapRecommendationProfile({
       mapFit: 8.6,
       versatility: 8.6,
       stage: { early: 8.3, mid: 8.6, late: 8.8 },
-      tags: ["last-pick", "control"],
+      tags: ["last-pick", "gem-carrier"],
     },
 
     // =========================
@@ -160,7 +166,7 @@ export default createMapRecommendationProfile({
         Draco: 8,
       },
       stage: { early: 7.8, mid: 8.5, late: 8.8 },
-      tags: ["tank-counter", "control"],
+      tags: ["tank-counter", "gem-carrier"],
     },
     Nita: {
       mapFit: 8.3,
@@ -183,13 +189,13 @@ export default createMapRecommendationProfile({
         Otis: 8,
       },
       stage: { early: 8.7, mid: 8.7, late: 8.4 },
-      tags: ["gem-carrier", "support"],
+      tags: ["gem-carrier"],
     },
     Charlie: {
       mapFit: 8.7,
       versatility: 8.6,
       stage: { early: 8.5, mid: 8.6, late: 8.7 },
-      tags: ["gem-carrier", "control"],
+      tags: ["gem-carrier"],
     },
     Najia: {
       mapFit: 8.8,
@@ -213,13 +219,13 @@ export default createMapRecommendationProfile({
       mapFit: 8.7,
       versatility: 8.8,
       stage: { early: 8.8, mid: 8.8, late: 8.6 },
-      tags: ["gem-carrier", "support"],
+      tags: ["gem-carrier"],
     },
     Stu: {
       mapFit: 8.5,
       versatility: 8.5,
       stage: { early: 8.5, mid: 8.4, late: 8.3 },
-      tags: ["flex"],
+      tags: ["agro"],
     },
     Bo: {
       mapFit: 8.4,
@@ -231,19 +237,19 @@ export default createMapRecommendationProfile({
       mapFit: 8.5,
       versatility: 8.6,
       stage: { early: 8.4, mid: 8.5, late: 8.6 },
-      tags: ["gem-carrier", "support"],
+      tags: ["gem-carrier"],
     },
     Lola: {
       mapFit: 8.3,
       versatility: 8.4,
       stage: { early: 8.2, mid: 8.3, late: 8.4 },
-      tags: ["flex"],
+      tags: ["gem-carrier"],
     },
     Gene: {
       mapFit: 8.9,
       versatility: 8.9,
       stage: { early: 9.0, mid: 8.9, late: 8.7 },
-      tags: ["gem-carrier", "support"],
+      tags: ["gem-carrier"],
     },
 
     // =========================
@@ -287,37 +293,37 @@ export default createMapRecommendationProfile({
       mapFit: 8.2,
       versatility: 8.3,
       stage: { early: 8.1, mid: 8.2, late: 8.3 },
-      tags: ["safe-pick"],
+      tags: ["agro"],
     },
     Buster: {
       mapFit: 8.3,
       versatility: 8.4,
       stage: { early: 8.2, mid: 8.3, late: 8.5 },
-      tags: ["safe-pick"],
+      tags: ["agro"],
     },
     Kit: {
       mapFit: 8.2,
       versatility: 8.3,
       stage: { early: 8.1, mid: 8.2, late: 8.4 },
-      tags: ["safe-pick"],
+      tags: ["agro"],
     },
     Finx: {
       mapFit: 8.1,
       versatility: 8.2,
       stage: { early: 8.0, mid: 8.1, late: 8.2 },
-      tags: ["safe-pick"],
+      tags: ["agro"],
     },
     Penny: {
       mapFit: 8.2,
       versatility: 8.3,
       stage: { early: 8.1, mid: 8.2, late: 8.4 },
-      tags: ["safe-pick"],
+      tags: ["agro"],
     },
     Spike: {
       mapFit: 8.3,
       versatility: 8.5,
       stage: { early: 8.3, mid: 8.4, late: 8.5 },
-      tags: ["safe-pick"],
+      tags: ["agro"],
     },
   },
 

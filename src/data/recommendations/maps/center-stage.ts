@@ -12,9 +12,9 @@ export default createMapRecommendationProfile({
   },
 
   composition: [
-    { tag: "tank-counter", count: 1, weight: 1.2 },
-    { tag: "agro", count: 1, weight: 1.1 },
-    { tag: "flex", count: 1, weight: 1.0 },
+    { tag: "tank-counter", count: 1, weight: 1.3 },
+    { tag: "agro", count: 1, weight: 1.2 },
+    { tag: "flex", count: 1, weight: 1.2 },
   ],
 
   brawlers: {
@@ -99,7 +99,7 @@ export default createMapRecommendationProfile({
         Otis: 1,
       },
       stage: { early: 5.8, mid: 7.2, late: 9.5 },
-      tags: ["last-pick", "tank"],
+      tags: ["last-pick", "agro"],
     },
     Edgar: {
       mapFit: 7.2,
@@ -158,7 +158,7 @@ export default createMapRecommendationProfile({
         Chester: 8,
       },
       stage: { early: 8.9, mid: 8.8, late: 8.0 },
-      tags: ["flex", "support"],
+      tags: ["flex"],
     },
     Meeple: {
       mapFit: 8.4,
@@ -168,7 +168,7 @@ export default createMapRecommendationProfile({
         Otis: 7,
       },
       stage: { early: 8.5, mid: 8.5, late: 8.1 },
-      tags: ["flex", "support"],
+      tags: ["flex"],
     },
 
     // =========================
@@ -238,43 +238,43 @@ export default createMapRecommendationProfile({
       mapFit: 8.0,
       versatility: 8.4,
       stage: { early: 8.0, mid: 8.2, late: 8.1 },
-      tags: ["safe-pick"],
+      tags: ["flex"],
     },
     Colt: {
       mapFit: 7.9,
       versatility: 8.5,
       stage: { early: 7.8, mid: 8.0, late: 8.0 },
-      tags: ["safe-pick"],
+      tags: ["flex"],
     },
     Maisie: {
       mapFit: 7.8,
       versatility: 8.3,
       stage: { early: 7.5, mid: 7.8, late: 8.0 },
-      tags: ["safe-pick"],
+      tags: ["flex"],
     },
     Moe: {
       mapFit: 7.8,
       versatility: 8.3,
       stage: { early: 7.4, mid: 7.8, late: 8.1 },
-      tags: ["safe-pick"],
+      tags: ["flex"],
     },
     Stu: {
       mapFit: 7.7,
       versatility: 8.4,
       stage: { early: 7.5, mid: 7.7, late: 7.8 },
-      tags: ["safe-pick"],
+      tags: ["flex"],
     },
     Willow: {
       mapFit: 7.6,
       versatility: 8.1,
       stage: { early: 7.2, mid: 7.6, late: 7.8 },
-      tags: ["safe-pick"],
+      tags: ["flex"],
     },
     Ziggy: {
       mapFit: 7.6,
       versatility: 8.1,
       stage: { early: 7.1, mid: 7.5, late: 7.8 },
-      tags: ["safe-pick"],
+      tags: ["flex"],
     },
   },
 

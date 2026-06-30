@@ -11,6 +11,12 @@ export default createMapRecommendationProfile({
     stage: 0.8,
   },
 
+  composition: [
+    { tag: "agro", count: 1, weight: 1.2 },
+    { tag: "range", count: 1, weight: 1.1 },
+    { tag: "flex", count: 1, weight: 1.0 },
+  ],
+  
   brawlers: {
     // =========================
     // 1st PICKS (PRIORITY CORE)
@@ -40,7 +46,7 @@ export default createMapRecommendationProfile({
         "R-T": 8,
       },
       stage: { early: 9.1, mid: 9.0, late: 8.8 },
-      tags: ["1st-pick", "support"],
+      tags: ["1st-pick", "range"],
     },
     Pierce: {
       mapFit: 9.1,
@@ -99,17 +105,17 @@ export default createMapRecommendationProfile({
     Nani: {
       mapFit: 8.8,
       stage: { early: 9.0, mid: 8.8, late: 8.6 },
-      tags: ["range", "sniper"],
+      tags: ["range"],
     },
     Belle: {
       mapFit: 8.9,
       stage: { early: 8.9, mid: 8.8, late: 8.7 },
-      tags: ["range", "sniper"],
+      tags: ["range"],
     },
     Byron: {
       mapFit: 8.7,
       stage: { early: 8.8, mid: 8.7, late: 8.6 },
-      tags: ["range", "support"],
+      tags: ["range"],
     },
     "R-T": {
       mapFit: 8.9,
@@ -117,17 +123,17 @@ export default createMapRecommendationProfile({
         Gene: 8,
       },
       stage: { early: 8.8, mid: 8.9, late: 8.8 },
-      tags: ["range", "control"],
+      tags: ["range", "flex"],
     },
     Gus: {
       mapFit: 8.4,
       stage: { early: 8.2, mid: 8.4, late: 8.5 },
-      tags: ["range", "support"],
+      tags: ["range", "range"],
     },
     Angelo: {
       mapFit: 8.9,
       stage: { early: 9.0, mid: 8.9, late: 8.7 },
-      tags: ["range", "sniper"],
+      tags: ["range",],
     },
     Brock: {
       mapFit: 8.8,
@@ -137,12 +143,12 @@ export default createMapRecommendationProfile({
     Mandy: {
       mapFit: 8.7,
       stage: { early: 8.8, mid: 8.7, late: 8.6 },
-      tags: ["range", "sniper"],
+      tags: ["range",],
     },
     Piper: {
       mapFit: 8.8,
       stage: { early: 8.9, mid: 8.8, late: 8.7 },
-      tags: ["range", "sniper"],
+      tags: ["range",],
     },
 
     // =========================
@@ -151,22 +157,22 @@ export default createMapRecommendationProfile({
     Charlie: {
       mapFit: 8.3,
       stage: { early: 8.0, mid: 8.3, late: 8.6 },
-      tags: ["flex", "control"],
+      tags: ["flex"],
     },
     Crow: {
       mapFit: 8.6,
       stage: { early: 8.8, mid: 8.7, late: 8.5 },
-      tags: ["flex", "pressure"],
+      tags: ["flex", "agro"],
     },
     Gray: {
       mapFit: 8.2,
       stage: { early: 8.0, mid: 8.2, late: 8.4 },
-      tags: ["flex", "support"],
+      tags: ["flex", "range"],
     },
     Meeple: {
       mapFit: 8.3,
       stage: { early: 8.2, mid: 8.3, late: 8.4 },
-      tags: ["flex", "support"],
+      tags: ["flex", "range"],
     },
     Glowy: {
       mapFit: 8.0,
@@ -176,7 +182,7 @@ export default createMapRecommendationProfile({
     Squeak: {
       mapFit: 8.4,
       stage: { early: 8.2, mid: 8.4, late: 8.6 },
-      tags: ["flex", "control"],
+      tags: ["flex"],
     },
     Ziggy: {
       mapFit: 8.1,
@@ -186,12 +192,12 @@ export default createMapRecommendationProfile({
     "8-Bit": {
       mapFit: 8.5,
       stage: { early: 8.0, mid: 8.6, late: 8.7 },
-      tags: ["flex", "damage"],
+      tags: ["flex", "range"],
     },
     Sprout: {
       mapFit: 8.3,
       stage: { early: 8.1, mid: 8.3, late: 8.5 },
-      tags: ["flex", "control"],
+      tags: ["flex"],
     },
 
     // =========================
@@ -203,7 +209,7 @@ export default createMapRecommendationProfile({
         Kit: 9,
       },
       stage: { early: 5.8, mid: 7.8, late: 9.3 },
-      tags: ["agro", "blue-star"],
+      tags: ["agro"],
     },
     Kaze: {
       mapFit: 8.6,
@@ -211,7 +217,7 @@ export default createMapRecommendationProfile({
         Kit: 9,
       },
       stage: { early: 6.0, mid: 7.9, late: 9.2 },
-      tags: ["agro", "blue-star"],
+      tags: ["agro"],
     },
     Carl: {
       mapFit: 8.3,
@@ -241,10 +247,10 @@ export default createMapRecommendationProfile({
     Max: {
       mapFit: 8.6,
       stage: { early: 8.0, mid: 8.5, late: 8.7 },
-      tags: ["agro", "support"],
+      tags: ["agro", "range"],
     },
   },
 
   notes:
-    "Dry Season is a long-range Bounty map. Prioritize sniper/range control first, then flex support, then blue-star/aggressive picks. Gene + R-T is a key control synergy, and Kit enables hyper-aggressive assassin dives with Mortis or Kaze.",
+    "Dry Season is a long-range Bounty map. Prioritizrange control first, then flex range, then blue-star/aggressive picks. Gene + R-T is a key control synergy, and Kit enables hyper-aggressive assassin dives with Mortis or Kaze.",
 })
