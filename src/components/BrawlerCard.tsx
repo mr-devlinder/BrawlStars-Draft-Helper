@@ -13,9 +13,11 @@ export default function BrawlerCard({
   disabled = false,
   compact = false,
 }: Props) {
+  const rarityClass = brawler.rarity.replace(/\s+/g, "")
+
   return (
     <button
-      className={`brawler-card rarity rarity-${brawler.rarity}${compact ? " compact" : ""}`}
+      className={`brawler-card rarity rarity-${rarityClass}${compact ? " compact" : ""}`}
       onClick={onClick}
       disabled={disabled}
       type="button"

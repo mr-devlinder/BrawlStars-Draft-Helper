@@ -10,6 +10,13 @@ export type StageBias = {
   late?: number
 }
 
+export type CompositionNeed = {
+  tag: string
+  count: number
+  weight?: number
+  notes?: string
+}
+
 export type BrawlerMapData = {
   mapFit?: number
   versatility?: number
@@ -25,6 +32,7 @@ export type MapRecommendationWeights = {
   versatility: number
   globalCounter: number
   globalFavor: number
+  composition: number
   synergy: number
   counter: number
   stage: number
@@ -34,6 +42,7 @@ export type MapRecommendationProfile = {
   mapName: string
   mode: string
   weights?: Partial<MapRecommendationWeights>
+  composition?: CompositionNeed[]
   brawlers: Partial<Record<string, BrawlerMapData>>
   notes?: string
 }
@@ -55,6 +64,7 @@ export type RecommendationBreakdown = {
   base: number
   globalCounter: number
   globalFavor: number
+  composition: number
   mapCounter: number
   mapFit: number
   versatility: number

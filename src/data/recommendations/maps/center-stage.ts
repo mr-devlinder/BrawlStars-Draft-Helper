@@ -11,6 +11,12 @@ export default createMapRecommendationProfile({
     stage: 0.8,
   },
 
+  composition: [
+    { tag: "tank-counter", count: 1, weight: 1.2 },
+    { tag: "agro", count: 1, weight: 1.1 },
+    { tag: "flex", count: 1, weight: 1.0 },
+  ],
+
   brawlers: {
     // =========================
     // 1st PICKS
@@ -42,7 +48,7 @@ export default createMapRecommendationProfile({
       mapFit: 9.2,
       versatility: 8.8,
       stage: { early: 9.2, mid: 8.9, late: 8.4 },
-      tags: ["1st-pick", "pressure"],
+      tags: ["1st-pick", "agro"],
     },
     Chester: {
       mapFit: 9.1,
@@ -57,7 +63,7 @@ export default createMapRecommendationProfile({
         Mortis: 7,
       },
       stage: { early: 9.0, mid: 8.7, late: 8.8 },
-      tags: ["1st-pick", "flex", "pressure"],
+      tags: ["1st-pick", "flex", "agro"],
     },
     Otis: {
       mapFit: 9.0,
@@ -112,7 +118,7 @@ export default createMapRecommendationProfile({
         Frank: 8,
       },
       stage: { early: 6.0, mid: 7.8, late: 9.1 },
-      tags: ["last-pick", "pressure"],
+      tags: ["last-pick", "agro"],
     },
     Mortis: {
       mapFit: 8.6,
@@ -176,7 +182,7 @@ export default createMapRecommendationProfile({
         Mortis: 7,
       },
       stage: { early: 7.5, mid: 8.5, late: 8.9 },
-      tags: ["tank-counter", "mid"],
+      tags: ["tank-counter", "flex"],
     },
     Griff: {
       mapFit: 8.5,
@@ -185,7 +191,7 @@ export default createMapRecommendationProfile({
         Frank: 7,
       },
       stage: { early: 7.8, mid: 8.5, late: 8.7 },
-      tags: ["tank-counter", "mid"],
+      tags: ["tank-counter", "flex"],
     },
     Clancy: {
       mapFit: 8.4,
@@ -194,7 +200,7 @@ export default createMapRecommendationProfile({
         Frank: 7,
       },
       stage: { early: 7.4, mid: 8.4, late: 8.8 },
-      tags: ["tank-counter", "mid"],
+      tags: ["tank-counter", "flex"],
     },
     Lumi: {
       mapFit: 8.3,
@@ -203,7 +209,7 @@ export default createMapRecommendationProfile({
         Frank: 7,
       },
       stage: { early: 7.3, mid: 8.2, late: 8.7 },
-      tags: ["tank-counter", "mid"],
+      tags: ["tank-counter", "flex"],
     },
     Nita: {
       mapFit: 8.2,
@@ -212,7 +218,7 @@ export default createMapRecommendationProfile({
         Shelly: 7,
       },
       stage: { early: 7.0, mid: 8.0, late: 8.6 },
-      tags: ["tank-counter", "mid"],
+      tags: ["tank-counter", "flex"],
     },
     Shelly: {
       mapFit: 8.1,
@@ -222,7 +228,7 @@ export default createMapRecommendationProfile({
         Mortis: 6,
       },
       stage: { early: 6.8, mid: 7.9, late: 8.8 },
-      tags: ["tank-counter", "mid"],
+      tags: ["tank-counter", "flex"],
     },
 
     // =========================

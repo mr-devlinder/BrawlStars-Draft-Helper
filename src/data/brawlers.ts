@@ -4,19 +4,19 @@ import { asset } from "../utils/assets"
 
 export type BrawlerRarity =
 
-    | "starter"
+    | "Starter"
 
-    | "rare"
+    | "Rare"
 
-    | "superRare"
+    | "Super Rare"
 
-    | "epic"
+    | "Epic"
 
-    | "mythic"
+    | "Mythic"
 
-    | "legendary"
+    | "Legendary"
 
-    | "ultraLegendary"
+    | "Ultra Legendary"
 
 
 
@@ -42,7 +42,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/shelly.png"),
 
-        rarity: "starter"
+        rarity: "Starter"
 
     },
 
@@ -52,7 +52,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/nita.png"),
 
-        rarity: "rare"
+        rarity: "Rare"
 
     },
 
@@ -62,7 +62,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/colt.png"),
 
-        rarity: "rare"
+        rarity: "Rare"
 
     },
 
@@ -72,7 +72,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/bull.png"),
 
-        rarity: "rare"
+        rarity: "Rare"
 
     },
 
@@ -82,7 +82,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/brock.png"),
 
-        rarity: "rare"
+        rarity: "Rare"
 
     },
 
@@ -92,7 +92,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/elprimo.png"),
 
-        rarity: "rare"
+        rarity: "Rare"
 
     },
 
@@ -102,7 +102,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/barley.png"),
 
-        rarity: "rare"
+        rarity: "Rare"
 
     },
 
@@ -112,7 +112,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/poco.png"),
 
-        rarity: "rare"
+        rarity: "Rare"
 
     },
 
@@ -122,7 +122,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/rosa.png"),
 
-        rarity: "rare"
+        rarity: "Rare"
 
     },
 
@@ -132,7 +132,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/jessie.png"),
 
-        rarity: "superRare"
+        rarity: "Super Rare"
 
     },
 
@@ -142,7 +142,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/dynamike.png"),
 
-        rarity: "superRare"
+        rarity: "Super Rare"
 
     },
 
@@ -152,7 +152,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/tick.png"),
 
-        rarity: "superRare"
+        rarity: "Super Rare"
 
     },
 
@@ -162,7 +162,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/8-bit.png"),
 
-        rarity: "superRare"
+        rarity: "Super Rare"
 
     },
 
@@ -172,7 +172,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/rico.png"),
 
-        rarity: "superRare"
+        rarity: "Super Rare"
 
     },
 
@@ -182,7 +182,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/darryl.png"),
 
-        rarity: "superRare"
+        rarity: "Super Rare"
 
     },
 
@@ -192,7 +192,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/penny.png"),
 
-        rarity: "superRare"
+        rarity: "Super Rare"
 
     },
 
@@ -202,7 +202,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/carl.png"),
 
-        rarity: "superRare"
+        rarity: "Super Rare"
 
     },
 
@@ -212,7 +212,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/jacky.png"),
 
-        rarity: "superRare"
+        rarity: "Super Rare"
 
     },
 
@@ -222,7 +222,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/gus.png"),
 
-        rarity: "superRare"
+        rarity: "Super Rare"
 
     },
 
@@ -232,7 +232,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/bo.png"),
 
-        rarity: "epic"
+        rarity: "Epic"
 
     },
 
@@ -242,7 +242,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/emz.png"),
 
-        rarity: "epic"
+        rarity: "Epic"
 
     },
 
@@ -252,7 +252,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/stu.png"),
 
-        rarity: "epic"
+        rarity: "Epic"
 
     },
 
@@ -262,7 +262,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/piper.png"),
 
-        rarity: "epic"
+        rarity: "Epic"
 
     },
 
@@ -272,7 +272,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/pam.png"),
 
-        rarity: "epic"
+        rarity: "Epic"
 
     },
 
@@ -282,7 +282,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/bolt.png"),
 
-        rarity: "epic"
+        rarity: "Epic"
 
     },
 
@@ -292,7 +292,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/frank.png"),
 
-        rarity: "epic"
+        rarity: "Epic"
 
     },
 
@@ -302,7 +302,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/bibi.png"),
 
-        rarity: "epic"
+        rarity: "Epic"
 
     },
 
@@ -312,7 +312,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/bea.png"),
 
-        rarity: "epic"
+        rarity: "Epic"
 
     },
 
@@ -322,7 +322,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/nani.png"),
 
-        rarity: "epic"
+        rarity: "Epic"
 
     },
 
@@ -332,7 +332,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/edgar.png"),
 
-        rarity: "epic"
+        rarity: "Epic"
 
     },
 
@@ -342,7 +342,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/griff.png"),
 
-        rarity: "epic"
+        rarity: "Epic"
 
     },
 
@@ -352,7 +352,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/grom.png"),
 
-        rarity: "epic"
+        rarity: "Epic"
 
     },
 
@@ -362,7 +362,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/bonnie.png"),
 
-        rarity: "epic"
+        rarity: "Epic"
 
     },
 
@@ -372,7 +372,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/gale.png"),
 
-        rarity: "epic"
+        rarity: "Epic"
 
     },
 
@@ -382,7 +382,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/colette.png"),
 
-        rarity: "epic"
+        rarity: "Epic"
 
     },
 
@@ -392,7 +392,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/belle.png"),
 
-        rarity: "epic"
+        rarity: "Epic"
 
     },
 
@@ -402,7 +402,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/ash.png"),
 
-        rarity: "epic"
+        rarity: "Epic"
 
     },
 
@@ -412,7 +412,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/lola.png"),
 
-        rarity: "epic"
+        rarity: "Epic"
 
     },
 
@@ -422,7 +422,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/sam.png"),
 
-        rarity: "epic"
+        rarity: "Epic"
 
     },
 
@@ -432,7 +432,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/mandy.png"),
 
-        rarity: "epic"
+        rarity: "Epic"
 
     },
 
@@ -442,7 +442,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/maisie.png"),
 
-        rarity: "epic"
+        rarity: "Epic"
 
     },
 
@@ -452,7 +452,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/hank.png"),
 
-        rarity: "epic"
+        rarity: "Epic"
 
     },
 
@@ -462,7 +462,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/pearl.png"),
 
-        rarity: "epic"
+        rarity: "Epic"
 
     },
 
@@ -472,7 +472,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/larrylawrie.png"),
 
-        rarity: "epic"
+        rarity: "Epic"
 
     },
 
@@ -482,7 +482,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/angelo.png"),
 
-        rarity: "epic"
+        rarity: "Epic"
 
     },
 
@@ -492,7 +492,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/berry.png"),
 
-        rarity: "epic"
+        rarity: "Epic"
 
     },
     {
@@ -501,7 +501,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/shade.png"),
 
-        rarity: "epic"
+        rarity: "Epic"
 
     },
     {
@@ -510,7 +510,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/meeple.png"),
 
-        rarity: "epic"
+        rarity: "Epic"
 
     },
 
@@ -520,7 +520,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/trunk.png"),
 
-        rarity: "epic"
+        rarity: "Epic"
 
     },
 
@@ -530,7 +530,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/mortis.png"),
 
-        rarity: "mythic"
+        rarity: "Mythic"
 
     },
 
@@ -540,7 +540,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/tara.png"),
 
-        rarity: "mythic"
+        rarity: "Mythic"
 
     },
 
@@ -550,7 +550,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/gene.png"),
 
-        rarity: "mythic"
+        rarity: "Mythic"
 
     },
 
@@ -560,7 +560,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/max.png"),
 
-        rarity: "mythic"
+        rarity: "Mythic"
 
     },
 
@@ -570,7 +570,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/mrp.png"),
 
-        rarity: "mythic"
+        rarity: "Mythic"
 
     },
 
@@ -580,7 +580,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/sprout.png"),
 
-        rarity: "mythic"
+        rarity: "Mythic"
 
     },
 
@@ -590,7 +590,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/byron.png"),
 
-        rarity: "mythic"
+        rarity: "Mythic"
 
     },
 
@@ -600,7 +600,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/squeak.png"),
 
-        rarity: "mythic"
+        rarity: "Mythic"
 
     },
 
@@ -610,7 +610,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/lou.png"),
 
-        rarity: "mythic"
+        rarity: "Mythic"
 
     },
 
@@ -620,7 +620,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/ruffs.png"),
 
-        rarity: "mythic"
+        rarity: "Mythic"
 
     },
 
@@ -630,7 +630,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/buzz.png"),
 
-        rarity: "mythic"
+        rarity: "Mythic"
 
     },
 
@@ -640,7 +640,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/fang.png"),
 
-        rarity: "mythic"
+        rarity: "Mythic"
 
     },
 
@@ -650,7 +650,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/eve.png"),
 
-        rarity: "mythic"
+        rarity: "Mythic"
 
     },
 
@@ -660,7 +660,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/janet.png"),
 
-        rarity: "mythic"
+        rarity: "Mythic"
 
     },
 
@@ -670,7 +670,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/otis.png"),
 
-        rarity: "mythic"
+        rarity: "Mythic"
 
     },
 
@@ -680,7 +680,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/buster.png"),
 
-        rarity: "mythic"
+        rarity: "Mythic"
 
     },
 
@@ -690,7 +690,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/gray.png"),
 
-        rarity: "mythic"
+        rarity: "Mythic"
 
     },
 
@@ -700,7 +700,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/r-t.png"),
 
-        rarity: "mythic"
+        rarity: "Mythic"
 
     },
 
@@ -710,7 +710,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/willow.png"),
 
-        rarity: "mythic"
+        rarity: "Mythic"
 
     },
 
@@ -720,7 +720,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/doug.png"),
 
-        rarity: "mythic"
+        rarity: "Mythic"
 
     },
 
@@ -730,7 +730,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/chuck.png"),
 
-        rarity: "mythic"
+        rarity: "Mythic"
 
     },
 
@@ -740,7 +740,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/charlie.png"),
 
-        rarity: "mythic"
+        rarity: "Mythic"
 
     },
 
@@ -750,7 +750,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/mico.png"),
 
-        rarity: "mythic"
+        rarity: "Mythic"
 
     },
 
@@ -760,7 +760,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/melodie.png"),
 
-        rarity: "mythic"
+        rarity: "Mythic"
 
     },
 
@@ -770,7 +770,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/lily.png"),
 
-        rarity: "mythic"
+        rarity: "Mythic"
 
     },
 
@@ -780,7 +780,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/clancy.png"),
 
-        rarity: "mythic"
+        rarity: "Mythic"
 
     },
 
@@ -790,7 +790,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/moe.png"),
 
-        rarity: "mythic"
+        rarity: "Mythic"
 
     },
 
@@ -800,7 +800,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/juju.png"),
 
-        rarity: "mythic"
+        rarity: "Mythic"
 
     },
 
@@ -810,7 +810,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/ollie.png"),
 
-        rarity: "mythic"
+        rarity: "Mythic"
 
     },
 
@@ -820,7 +820,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/lumi.png"),
 
-        rarity: "mythic"
+        rarity: "Mythic"
 
     },
 
@@ -830,7 +830,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/finx.png"),
 
-        rarity: "mythic"
+        rarity: "Mythic"
 
     },
 
@@ -840,7 +840,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/jae-yong.png"),
 
-        rarity: "mythic"
+        rarity: "Mythic"
 
     },
 
@@ -850,7 +850,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/alli.png"),
 
-        rarity: "mythic"
+        rarity: "Mythic"
 
     },
 
@@ -860,7 +860,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/mina.png"),
 
-        rarity: "mythic"
+        rarity: "Mythic"
 
     },
 
@@ -870,7 +870,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/ziggy.png"),
 
-        rarity: "mythic"
+        rarity: "Mythic"
 
     },
 
@@ -880,7 +880,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/gigi.png"),
 
-        rarity: "mythic"
+        rarity: "Mythic"
 
     },
 
@@ -890,7 +890,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/glowy.png"),
 
-        rarity: "mythic"
+        rarity: "Mythic"
 
     },
 
@@ -900,7 +900,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/najia.png"),
 
-        rarity: "mythic"
+        rarity: "Mythic"
 
     },
 
@@ -910,7 +910,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/starrnova.png"),
 
-        rarity: "mythic"
+        rarity: "Mythic"
 
     },
 
@@ -920,7 +920,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/damian.png"),
 
-        rarity: "mythic"
+        rarity: "Mythic"
 
     },
 
@@ -930,7 +930,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/spike.png"),
 
-        rarity: "legendary"
+        rarity: "Legendary"
 
     },
 
@@ -940,7 +940,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/crow.png"),
 
-        rarity: "legendary"
+        rarity: "Legendary"
 
     },
 
@@ -950,7 +950,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/leon.png"),
 
-        rarity: "legendary"
+        rarity: "Legendary"
 
     },
 
@@ -960,7 +960,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/sandy.png"),
 
-        rarity: "legendary"
+        rarity: "Legendary"
 
     },
 
@@ -970,7 +970,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/amber.png"),
 
-        rarity: "legendary"
+        rarity: "Legendary"
 
     },
 
@@ -980,7 +980,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/meg.png"),
 
-        rarity: "legendary"
+        rarity: "Legendary"
 
     },
 
@@ -990,7 +990,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/surge.png"),
 
-        rarity: "legendary"
+        rarity: "Legendary"
 
     },
 
@@ -1000,7 +1000,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/chester.png"),
 
-        rarity: "legendary"
+        rarity: "Legendary"
 
     },
 
@@ -1010,7 +1010,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/cordelius.png"),
 
-        rarity: "legendary"
+        rarity: "Legendary"
 
     },
 
@@ -1020,7 +1020,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/kit.png"),
 
-        rarity: "legendary"
+        rarity: "Legendary"
 
     },
 
@@ -1030,7 +1030,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/draco.png"),
 
-        rarity: "legendary"
+        rarity: "Legendary"
 
     },
 
@@ -1040,7 +1040,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/kenji.png"),
 
-        rarity: "legendary"
+        rarity: "Legendary"
 
     },
 
@@ -1050,7 +1050,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/pierce.png"),
 
-        rarity: "legendary"
+        rarity: "Legendary"
 
     },
 
@@ -1060,7 +1060,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/kaze.png"),
 
-        rarity: "ultraLegendary"
+        rarity: "Ultra Legendary"
 
     },
 
@@ -1070,7 +1070,7 @@ export const brawlers: Brawler[] = [
 
         image: asset("/brawlers/sirius.png"),
 
-        rarity: "ultraLegendary"
+        rarity: "Ultra Legendary"
 
     },
 

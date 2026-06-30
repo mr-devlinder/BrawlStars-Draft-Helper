@@ -1,4 +1,5 @@
 import type { Brawler } from "../data/brawlers"
+import type { GameMap } from "../data/maps"
 import type { RecommendationResult } from "../data/recommendations/types"
 
 import BanSlot from "./BanSlot"
@@ -10,8 +11,10 @@ type Props = {
   blueBans: Brawler[]
   redBans: Brawler[]
   recommendations: RecommendationResult[]
+  onSelectRecommendation: (brawler: Brawler) => void
   currentTeam: "blue" | "red" | null
   phase: "bans" | "picks" | "complete"
+  selectedMap: GameMap | null
 }
 
 function PickSlot({ brawler, label }: { brawler: Brawler | null; label: string }) {
@@ -28,8 +31,10 @@ export default function DraftBoard({
   blueBans,
   redBans,
   recommendations,
+  onSelectRecommendation,
   currentTeam,
   phase,
+  selectedMap,
 }: Props) {
   const topScore = recommendations[0]?.score ?? 1
 
@@ -58,26 +63,38 @@ export default function DraftBoard({
           <span>{currentTeam ? `${currentTeam === "blue" ? "Blue" : "Red"} turn` : "No active turn"}</span>
         </div>
 
-        <div className="recommendation-list compact">
-          {recommendations.slice(0, 5).map((result) => (
-            <article className="recommendation-row compact" key={result.brawler.name}>
-              <div className="recommendation-main">
-                <img src={result.brawler.image} alt={result.brawler.name} />
-                <div>
-                  <strong>{result.brawler.name}</strong>
-                  <span>{result.reasons.length ? result.reasons.join(" · ") : "baseline value"}</span>
+        {selectedMap ? (
+          <div className="recommendation-list compact">
+            {recommendations.slice(0, 5).map((result) => (
+              <button
+                className="recommendation-row compact recommendation-button"
+                key={result.brawler.name}
+                onClick={() => onSelectRecommendation(result.brawler)}
+                type="button"
+              >
+                <div className="recommendation-main">
+                  <img src={result.brawler.image} alt={result.brawler.name} />
+                  <div>
+                    <strong>{result.brawler.name}</strong>
+                    <span>{result.reasons.length ? result.reasons.join(" · ") : "baseline value"}</span>
+                  </div>
                 </div>
-              </div>
 
-              <div className="recommendation-score">
-                <strong>{result.score.toFixed(2)}</strong>
-                <div className="score-bar">
-                  <span style={{ width: `${Math.max(8, (result.score / topScore) * 100)}%` }} />
+                <div className="recommendation-score">
+                  <strong>{result.score.toFixed(2)}</strong>
+                  <div className="score-bar">
+                    <span style={{ width: `${Math.max(8, (result.score / topScore) * 100)}%` }} />
+                  </div>
                 </div>
-              </div>
-            </article>
-          ))}
-        </div>
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div className="recommendation-empty-state">
+            <strong>Pick a map to unlock recommendations</strong>
+            <span>The engine waits for map context before showing draft suggestions.</span>
+          </div>
+        )}
       </div>
 
       <div className={"team-column red" + (currentTeam === "red" ? " active" : "")}>
