@@ -1044,6 +1044,16 @@ export const brawlers: Brawler[] = [
 
     },
 
+ //   {
+
+ //       name: "Nori",
+
+ //       image: asset("/brawlers/nori.png"),
+
+ //       rarity: "Legendary"
+
+ //   },
+
     {
 
         name: "Pierce",

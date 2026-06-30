@@ -11,7 +11,8 @@ export type StageBias = {
 }
 
 export type CompositionNeed = {
-  tag: string
+  tag?: string
+  tags?: string[]
   count: number
   weight?: number
   notes?: string

@@ -22,6 +22,12 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value))
 }
 
+function parseNeedTags(need: { tag?: string; tags?: string[] }) {
+  if (need.tags && need.tags.length > 0) return need.tags
+  if (need.tag) return [need.tag]
+  return []
+}
+
 function average(values: Array<number | undefined>) {
   const filtered = values.filter((value): value is number => typeof value === "number")
   if (filtered.length === 0) return 0
@@ -125,9 +131,11 @@ export function getDraftRecommendations(state: DraftState): RecommendationResult
       const globalFavorBase = getGlobalFavorScore(brawler.name, enemyNames)
       const candidateTags = entry?.tags ?? []
       const compositionScore = compositionNeeds.reduce((score, need) => {
-        if (!candidateTags.includes(need.tag)) return score
+        const needTags = parseNeedTags(need)
+        if (needTags.length === 0) return score
+        if (!needTags.some((tag) => candidateTags.includes(tag))) return score
 
-        const currentCount = friendlyTagCounts[need.tag] ?? 0
+        const currentCount = Math.max(...needTags.map((tag) => friendlyTagCounts[tag] ?? 0), 0)
         const missing = Math.max(0, need.count - currentCount)
         if (missing <= 0) return score
 

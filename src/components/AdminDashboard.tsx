@@ -1,0 +1,981 @@
+import { useEffect, useMemo, useState } from "react"
+import { brawlers, type Brawler } from "../data/brawlers"
+import { createMapRecommendationProfile } from "../data/recommendations/base"
+import { getRecommendationProfile } from "../data/recommendations"
+import type { GameMap } from "../data/maps"
+import type { GlobalCounterMatrix } from "../data/recommendations/globalCounters"
+import type {
+  BrawlerMapData,
+  CompositionNeed,
+  MapRecommendationProfile,
+  MapRecommendationWeights,
+} from "../data/recommendations/types"
+import {
+  loadStoredGlobalCounters,
+  loadStoredProfileOverrides,
+  saveStoredGlobalCounters,
+  saveStoredProfileOverrides,
+} from "../data/adminStore"
+
+type Props = {
+  maps: Record<string, GameMap>
+  onMapsChange: (maps: Record<string, GameMap>) => void
+  onBackToDraft: () => void
+  onLogout: () => void
+}
+
+type CompositionDraft = {
+  id: string
+  tags: string
+  count: string
+  weight: string
+  notes: string
+}
+
+type BrawlerDraft = {
+  mapFit: string
+  versatility: string
+  tags: string
+  stageEarly: string
+  stageMid: string
+  stageLate: string
+  synergy: string
+}
+
+type ProfileDraft = {
+  weights: Record<keyof MapRecommendationWeights, string>
+  composition: CompositionDraft[]
+  brawlers: Record<string, BrawlerDraft>
+}
+
+type GlobalDraftEntry = {
+  counters: string
+  favoredInto: string
+}
+
+type SyncState = {
+  state: "idle" | "saving" | "saved" | "error"
+  message: string
+  details?: string
+}
+
+type WeightKey = keyof MapRecommendationWeights
+
+const weightKeys: WeightKey[] = [
+  "mapFit",
+  "versatility",
+  "globalCounter",
+  "globalFavor",
+  "composition",
+  "synergy",
+  "counter",
+  "stage",
+]
+
+function parseLineScores(value: string) {
+  return value
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .reduce<Record<string, number>>((acc, line) => {
+      const [rawName, rawScore] = line.split(":")
+      if (!rawName || !rawScore) return acc
+
+      const name = rawName.trim()
+      const score = Number.parseFloat(rawScore.trim())
+      if (!name || Number.isNaN(score)) return acc
+
+      acc[name] = score
+      return acc
+    }, {})
+}
+
+function stringifyLineScores(values: Partial<Record<string, number>> | undefined) {
+  return Object.entries(values ?? {})
+    .map(([name, score]) => `${name}: ${score}`)
+    .join("\n")
+}
+
+function stringifyTagList(tags: string[] | undefined) {
+  return (tags ?? []).join(" or ")
+}
+
+function parseTagList(tags: string) {
+  return tags
+    .split(/\s*(?:\||,|\/|\bor\b)\s*/i)
+    .map((tag) => tag.trim())
+    .filter(Boolean)
+}
+
+function numberToInput(value: number | undefined) {
+  return typeof value === "number" && Number.isFinite(value) ? String(value) : ""
+}
+
+function parseNumber(value: string, fallback = 0) {
+  const next = Number.parseFloat(value)
+  return Number.isFinite(next) ? next : fallback
+}
+
+function formatSyncError(error: unknown) {
+  const raw = error instanceof Error ? error.message : String(error)
+  return raw.replace(/\s+/g, " ").trim().slice(0, 180)
+}
+
+function buildBrawlerDraft(entry?: BrawlerMapData): BrawlerDraft {
+  return {
+    mapFit: numberToInput(entry?.mapFit),
+    versatility: numberToInput(entry?.versatility),
+    tags: stringifyTagList(entry?.tags),
+    stageEarly: numberToInput(entry?.stage?.early),
+    stageMid: numberToInput(entry?.stage?.mid),
+    stageLate: numberToInput(entry?.stage?.late),
+    synergy: stringifyLineScores(entry?.synergy),
+  }
+}
+
+function buildCompositionDraft(entry: CompositionNeed): CompositionDraft {
+  const tags = entry.tags && entry.tags.length > 0 ? entry.tags : entry.tag ? [entry.tag] : []
+  return {
+    id: `${tags.join("-") || "composition"}-${Math.random().toString(36).slice(2, 8)}`,
+    tags: tags.join(" or "),
+    count: String(entry.count),
+    weight: String(entry.weight ?? 1),
+    notes: entry.notes ?? "",
+  }
+}
+
+function buildProfileDraft(profile: MapRecommendationProfile): ProfileDraft {
+  const resolved = createMapRecommendationProfile(profile)
+
+  return {
+    weights: weightKeys.reduce((acc, key) => {
+      acc[key] = numberToInput(resolved.weights?.[key])
+      return acc
+    }, {} as Record<WeightKey, string>),
+    composition: (resolved.composition ?? []).map(buildCompositionDraft),
+    brawlers: brawlers.reduce((acc, brawler) => {
+      acc[brawler.name] = buildBrawlerDraft(resolved.brawlers?.[brawler.name])
+      return acc
+    }, {} as Record<string, BrawlerDraft>),
+  }
+}
+
+function buildGlobalDraft(matrix: GlobalCounterMatrix) {
+  return brawlers.reduce((acc, brawler) => {
+    const entry = matrix[brawler.name] ?? { counters: {}, favoredInto: {} }
+    acc[brawler.name] = {
+      counters: stringifyLineScores(entry.counters),
+      favoredInto: stringifyLineScores(entry.favoredInto),
+    }
+    return acc
+  }, {} as Record<string, GlobalDraftEntry>)
+}
+
+function serializeBrawlerDraft(draft: BrawlerDraft): BrawlerMapData {
+  const synergy = parseLineScores(draft.synergy)
+  const tags = parseTagList(draft.tags)
+  const stageEntries = {
+    early: parseNumber(draft.stageEarly, 0),
+    mid: parseNumber(draft.stageMid, 0),
+    late: parseNumber(draft.stageLate, 0),
+  }
+
+  const result: BrawlerMapData = {}
+
+  const mapFit = parseNumber(draft.mapFit, Number.NaN)
+  const versatility = parseNumber(draft.versatility, Number.NaN)
+  if (Number.isFinite(mapFit)) result.mapFit = mapFit
+  if (Number.isFinite(versatility)) result.versatility = versatility
+  if (tags.length > 0) result.tags = tags
+  if (Object.keys(synergy).length > 0) result.synergy = synergy
+  if (stageEntries.early || stageEntries.mid || stageEntries.late) {
+    result.stage = stageEntries
+  }
+
+  return result
+}
+
+function serializeCompositionDraft(rows: CompositionDraft[]) {
+  return rows
+    .map((row) => {
+      const tags = parseTagList(row.tags)
+      const count = parseNumber(row.count, 0)
+      const weight = parseNumber(row.weight, 1)
+      const notes = row.notes.trim()
+
+      if (tags.length === 0 || count <= 0) return null
+
+      const entry: CompositionNeed = {
+        count,
+        weight,
+      }
+
+      if (tags.length === 1) {
+        entry.tag = tags[0]
+      } else {
+        entry.tags = tags
+      }
+      if (notes) entry.notes = notes
+
+      return entry
+    })
+    .filter((entry): entry is CompositionNeed => Boolean(entry))
+}
+
+function serializeProfileDraft(
+  mapName: string,
+  mode: string,
+  draft: ProfileDraft,
+  baseProfile?: MapRecommendationProfile,
+): MapRecommendationProfile {
+  const weights = weightKeys.reduce((acc, key) => {
+    const fallback = baseProfile?.weights?.[key] ?? 1
+    acc[key] = parseNumber(draft.weights[key], fallback)
+    return acc
+  }, {} as Partial<Record<WeightKey, number>>)
+
+  const brawlerProfiles = Object.entries(draft.brawlers).reduce((acc, [name, brawlerDraft]) => {
+    acc[name] = serializeBrawlerDraft(brawlerDraft)
+    return acc
+  }, {} as Record<string, BrawlerMapData>)
+
+  return createMapRecommendationProfile({
+    mapName,
+    mode,
+    weights,
+    composition: serializeCompositionDraft(draft.composition),
+    brawlers: brawlerProfiles,
+    notes: baseProfile?.notes,
+  })
+}
+
+function makeUniqueMapName(name: string, maps: Record<string, GameMap>) {
+  if (!maps[name]) return name
+  let suffix = 2
+  let nextName = `${name} ${suffix}`
+
+  while (maps[nextName]) {
+    suffix += 1
+    nextName = `${name} ${suffix}`
+  }
+
+  return nextName
+}
+
+function getFirstMapName(maps: Record<string, GameMap>) {
+  return Object.keys(maps)[0] ?? ""
+}
+
+export default function AdminDashboard({ maps, onMapsChange, onBackToDraft, onLogout }: Props) {
+  const [selectedMapName, setSelectedMapName] = useState(getFirstMapName(maps))
+  const [selectedBrawlerName, setSelectedBrawlerName] = useState<Brawler["name"]>(brawlers[0]?.name ?? "")
+  const [mapSearch, setMapSearch] = useState("")
+  const [brawlerSearch, setBrawlerSearch] = useState("")
+  const [globalSearch, setGlobalSearch] = useState("")
+  const [profiles, setProfiles] = useState<Record<string, MapRecommendationProfile>>(() => loadStoredProfileOverrides())
+  const [globalCounters, setGlobalCounters] = useState<GlobalCounterMatrix>(() => loadStoredGlobalCounters())
+  const [mapDraft, setMapDraft] = useState({ name: "", mode: "", image: "" })
+  const [profileDraft, setProfileDraft] = useState<ProfileDraft>(() =>
+    buildProfileDraft(getRecommendationProfile(getFirstMapName(maps) || undefined)),
+  )
+  const [globalDraft, setGlobalDraft] = useState<Record<string, GlobalDraftEntry>>(() =>
+    buildGlobalDraft(loadStoredGlobalCounters()),
+  )
+  const [newMapName, setNewMapName] = useState("")
+  const [newMapMode, setNewMapMode] = useState("Brawl Ball")
+  const [newMapImage, setNewMapImage] = useState("")
+  const [syncState, setSyncState] = useState<SyncState>({
+    state: "idle",
+    message: "Ready",
+  })
+
+  useEffect(() => {
+    const firstMap = getFirstMapName(maps)
+    if (selectedMapName && maps[selectedMapName]) return
+    setSelectedMapName(firstMap)
+  }, [maps, selectedMapName])
+
+  const selectedMap = selectedMapName ? maps[selectedMapName] ?? null : null
+  const savedProfile = selectedMapName
+    ? profiles[selectedMapName] ?? getRecommendationProfile(selectedMapName)
+    : getRecommendationProfile(getFirstMapName(maps) || undefined)
+  const selectedBrawler = brawlers.find((brawler) => brawler.name === selectedBrawlerName) ?? brawlers[0]
+
+  useEffect(() => {
+    if (!selectedMap) {
+      setMapDraft({ name: "", mode: "", image: "" })
+      return
+    }
+
+    setMapDraft({
+      name: selectedMap.name,
+      mode: selectedMap.mode,
+      image: selectedMap.image,
+    })
+  }, [selectedMapName, selectedMap?.name, selectedMap?.mode, selectedMap?.image])
+
+  useEffect(() => {
+    setProfileDraft(buildProfileDraft(savedProfile))
+  }, [selectedMapName, profiles])
+
+  useEffect(() => {
+    setGlobalDraft(buildGlobalDraft(globalCounters))
+  }, [globalCounters])
+
+  const filteredMaps = useMemo(
+    () =>
+      Object.values(maps).filter((map) =>
+        (map.name + " " + map.mode).toLowerCase().includes(mapSearch.toLowerCase()),
+      ),
+    [maps, mapSearch],
+  )
+
+  const filteredBrawlers = useMemo(
+    () => brawlers.filter((brawler) => brawler.name.toLowerCase().includes(brawlerSearch.toLowerCase())),
+    [brawlerSearch],
+  )
+
+  const filteredGlobalBrawlers = useMemo(
+    () => brawlers.filter((brawler) => brawler.name.toLowerCase().includes(globalSearch.toLowerCase())),
+    [globalSearch],
+  )
+
+  function setSync(state: SyncState["state"], message: string, details?: string) {
+    setSyncState({ state, message, details })
+  }
+
+  function commitMaps(nextMaps: Record<string, GameMap>) {
+    onMapsChange(nextMaps)
+    if (selectedMapName && !nextMaps[selectedMapName]) {
+      setSelectedMapName(getFirstMapName(nextMaps))
+    }
+  }
+
+  async function commitProfiles(nextProfiles: Record<string, MapRecommendationProfile>, message: string) {
+    setProfiles(nextProfiles)
+    setSync("saving", message)
+    try {
+      await saveStoredProfileOverrides(nextProfiles)
+      setSync("saved", "Profile data saved")
+      return true
+    } catch (error) {
+      setSync("error", "Could not save profile data", formatSyncError(error))
+      return false
+    }
+  }
+
+  async function commitGlobalCounters(nextMatrix: GlobalCounterMatrix) {
+    setGlobalCounters(nextMatrix)
+    setSync("saving", "Saving global matchups...")
+    try {
+      await saveStoredGlobalCounters(nextMatrix)
+      setSync("saved", "Global matchups saved")
+    } catch (error) {
+      setSync("error", "Could not save global matchups", formatSyncError(error))
+    }
+  }
+
+  function updateMapDraftField<K extends keyof GameMap>(field: K, value: GameMap[K]) {
+    setMapDraft((current) => ({
+      ...current,
+      [field]: value,
+    }))
+  }
+
+  function updateProfileWeight(field: WeightKey, value: string) {
+    setProfileDraft((current) => ({
+      ...current,
+      weights: {
+        ...current.weights,
+        [field]: value,
+      },
+    }))
+  }
+
+  function updateCompositionRow(id: string, key: keyof CompositionDraft, value: string) {
+    setProfileDraft((current) => {
+      const nextComposition = current.composition.map((row) =>
+        row.id === id
+          ? {
+              ...row,
+              [key]: value,
+            }
+          : row,
+      )
+
+      return {
+        ...current,
+        composition: nextComposition,
+      }
+    })
+  }
+
+  function addCompositionRow() {
+    setProfileDraft((current) => ({
+      ...current,
+      composition: [
+        ...current.composition,
+        { id: Math.random().toString(36).slice(2, 10), tags: "", count: "1", weight: "1", notes: "" },
+      ],
+    }))
+  }
+
+  function removeCompositionRow(id: string) {
+    setProfileDraft((current) => ({
+      ...current,
+      composition: current.composition.filter((row) => row.id !== id),
+    }))
+  }
+
+  function updateSelectedBrawlerDraft(field: keyof BrawlerDraft, value: string) {
+    if (!selectedBrawler) return
+
+    setProfileDraft((current) => ({
+      ...current,
+      brawlers: {
+        ...current.brawlers,
+        [selectedBrawler.name]: {
+          ...(current.brawlers[selectedBrawler.name] ?? buildBrawlerDraft()),
+          [field]: value,
+        },
+      },
+    }))
+  }
+
+  function updateGlobalDraft(brawlerName: string, field: keyof GlobalDraftEntry, value: string) {
+    setGlobalDraft((current) => ({
+      ...current,
+      [brawlerName]: {
+        ...(current[brawlerName] ?? { counters: "", favoredInto: "" }),
+        [field]: value,
+      },
+    }))
+  }
+
+  async function saveSelectedMapProfile() {
+    if (!selectedMap) return
+
+    const originalName = selectedMapName
+    const nextName = mapDraft.name.trim() || selectedMap.name
+    const nextMode = mapDraft.mode.trim() || selectedMap.mode
+    const nextImage = mapDraft.image.trim()
+    const nextMap: GameMap = {
+      name: nextName,
+      mode: nextMode,
+      image: nextImage,
+    }
+    const nextProfile = serializeProfileDraft(nextName, nextMode, profileDraft, savedProfile)
+
+    const nextMaps = { ...maps }
+    const nextProfiles = { ...profiles }
+
+    if (originalName && originalName !== nextName) {
+      delete nextMaps[originalName]
+      delete nextProfiles[originalName]
+    }
+
+    nextMaps[nextName] = nextMap
+    nextProfiles[nextName] = nextProfile
+
+    commitMaps(nextMaps)
+    setProfiles(nextProfiles)
+    setSelectedMapName(nextName)
+    setMapDraft({
+      name: nextMap.name,
+      mode: nextMap.mode,
+      image: nextMap.image,
+    })
+    setProfileDraft(buildProfileDraft(nextProfile))
+    setSync("saving", "Saving map profile...")
+
+    try {
+      await saveStoredProfileOverrides(nextProfiles)
+      setSync("saved", `Saved ${nextName}`)
+    } catch (error) {
+      setSync("error", "Could not save map profile", formatSyncError(error))
+    }
+  }
+
+  async function saveGlobalMatchupDraft() {
+    const nextMatrix = brawlers.reduce((acc, brawler) => {
+      const entry = globalDraft[brawler.name] ?? { counters: "", favoredInto: "" }
+      const counters = parseLineScores(entry.counters)
+      const favoredInto = parseLineScores(entry.favoredInto)
+      if (Object.keys(counters).length > 0 || Object.keys(favoredInto).length > 0) {
+        acc[brawler.name] = { counters, favoredInto }
+      }
+      return acc
+    }, {} as GlobalCounterMatrix)
+
+    await commitGlobalCounters(nextMatrix)
+  }
+
+  async function createNewMap() {
+    const nextName = makeUniqueMapName(newMapName.trim() || "New Map", maps)
+    const nextMode = newMapMode.trim() || "Brawl Ball"
+    const nextImage = newMapImage.trim()
+
+    const nextMaps = {
+      ...maps,
+      [nextName]: {
+        name: nextName,
+        mode: nextMode,
+        image: nextImage,
+      },
+    }
+
+    const nextProfiles = {
+      ...profiles,
+      [nextName]: createMapRecommendationProfile({
+        mapName: nextName,
+        mode: nextMode,
+        brawlers: {},
+      }),
+    }
+
+    commitMaps(nextMaps)
+    const saved = await commitProfiles(nextProfiles, "Saving new map...")
+    setSelectedMapName(nextName)
+    setSelectedBrawlerName(brawlers[0]?.name ?? "")
+    setMapDraft({
+      name: nextName,
+      mode: nextMode,
+      image: nextImage,
+    })
+    setProfileDraft(buildProfileDraft(nextProfiles[nextName]))
+    setNewMapName("")
+    setNewMapImage("")
+    if (saved) {
+      setSync("saved", "Map created")
+    }
+  }
+
+  async function deleteSelectedMap() {
+    if (!selectedMapName) return
+
+    const nextMaps = { ...maps }
+    delete nextMaps[selectedMapName]
+
+    const nextProfiles = { ...profiles }
+    delete nextProfiles[selectedMapName]
+
+    commitMaps(nextMaps)
+    const saved = await commitProfiles(nextProfiles, "Deleting map...")
+    setSelectedMapName(getFirstMapName(nextMaps))
+    setSelectedBrawlerName(brawlers[0]?.name ?? "")
+    if (saved) {
+      setSync("saved", "Map deleted")
+    }
+  }
+
+  const mapCount = Object.keys(maps).length
+  const selectedProfileJson = selectedMapName ? profiles[selectedMapName] ?? savedProfile : savedProfile
+  const selectedBrawlerDraft = profileDraft.brawlers[selectedBrawler?.name ?? ""]
+
+  return (
+    <main className="app admin-app">
+      <header className="top-bar admin-top-bar">
+        <div className="brand">
+          <div className="brand-mark">
+            <img src="favicon.svg" alt="Brawl Stars Draft Logo" />
+          </div>
+          <div>
+            <h1>Admin</h1>
+            <span>Draft Data Manager</span>
+          </div>
+        </div>
+
+        <div className="admin-top-stats">
+          <div>
+            <span>Maps</span>
+            <strong>{mapCount}</strong>
+          </div>
+          <div className={"save-pill " + syncState.state}>
+            <span>Sync</span>
+            <strong>{syncState.message}</strong>
+          </div>
+        </div>
+
+        <div className="actions">
+          <button type="button" onClick={onBackToDraft}>
+            Back
+          </button>
+          <button type="button" onClick={onLogout}>
+            Logout
+          </button>
+        </div>
+      </header>
+
+      <section className="admin-layout">
+        <aside className="panel admin-sidebar">
+          <div className="admin-section">
+            <div className="panel-heading">
+              <h2>Maps</h2>
+              <span>{filteredMaps.length}</span>
+            </div>
+
+            <label className="admin-search">
+              <span>Search maps</span>
+              <input
+                value={mapSearch}
+                onChange={(event) => setMapSearch(event.target.value)}
+                placeholder="Filter maps"
+              />
+            </label>
+
+            <div className="admin-list">
+              {filteredMaps.map((map) => (
+                <button
+                  className={"admin-list-item" + (selectedMapName === map.name ? " selected" : "")}
+                  key={map.name}
+                  onClick={() => setSelectedMapName(map.name)}
+                  type="button"
+                >
+                  <strong>{map.name}</strong>
+                  <span>{map.mode}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="admin-section">
+            <div className="panel-heading">
+              <h2>Add map</h2>
+              <span>New entry</span>
+            </div>
+            <div className="admin-stack">
+              <label>
+                <span>Name</span>
+                <input
+                  value={newMapName}
+                  onChange={(event) => setNewMapName(event.target.value)}
+                  placeholder="New map"
+                />
+              </label>
+              <label>
+                <span>Mode</span>
+                <input
+                  value={newMapMode}
+                  onChange={(event) => setNewMapMode(event.target.value)}
+                  placeholder="Mode"
+                />
+              </label>
+              <label>
+                <span>Image path</span>
+                <input
+                  value={newMapImage}
+                  onChange={(event) => setNewMapImage(event.target.value)}
+                  placeholder="/maps/example.png"
+                />
+              </label>
+              <button type="button" onClick={() => void createNewMap()}>
+                Add map
+              </button>
+            </div>
+          </div>
+
+          <div className="admin-section">
+            <div className="panel-heading">
+              <h2>Global Matchups</h2>
+              <div className="admin-section-toolbar">
+                <span>{filteredGlobalBrawlers.length}</span>
+                <button type="button" onClick={() => void saveGlobalMatchupDraft()}>
+                  Save
+                </button>
+              </div>
+            </div>
+
+            <label className="admin-search">
+              <span>Search brawlers</span>
+              <input
+                value={globalSearch}
+                onChange={(event) => setGlobalSearch(event.target.value)}
+                placeholder="Filter global counters"
+              />
+            </label>
+
+            <div className="admin-global-list">
+              {filteredGlobalBrawlers.map((brawler) => {
+                const entry = globalDraft[brawler.name] ?? { counters: "", favoredInto: "" }
+
+                return (
+                  <div className="admin-global-row" key={brawler.name}>
+                    <div className="admin-global-head">
+                      <strong>{brawler.name}</strong>
+                      <span>{brawler.rarity}</span>
+                    </div>
+                    <label>
+                      <span>Counters</span>
+                      <textarea
+                        rows={5}
+                        value={entry.counters}
+                        onChange={(event) => updateGlobalDraft(brawler.name, "counters", event.target.value)}
+                        placeholder="Colette: 9.1"
+                      />
+                    </label>
+                    <label>
+                      <span>Favored into</span>
+                      <textarea
+                        rows={5}
+                        value={entry.favoredInto}
+                        onChange={(event) => updateGlobalDraft(brawler.name, "favoredInto", event.target.value)}
+                        placeholder="Bibi: 6.8"
+                      />
+                    </label>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
+          <div className="admin-section admin-sync-panel">
+            <div className="panel-heading">
+              <h2>Sync</h2>
+              <span>{syncState.state}</span>
+            </div>
+            <p className="admin-sync-copy">
+              This shows the latest save result. Successful saves update the local cache and Supabase.
+            </p>
+            {syncState.details ? (
+              <details className="admin-sync-details">
+                <summary>Details</summary>
+                <pre>{syncState.details}</pre>
+              </details>
+            ) : null}
+          </div>
+        </aside>
+
+        <section className="panel admin-workspace">
+          {!selectedMap ? (
+            <div className="recommendation-empty-state">
+              <strong>No map selected</strong>
+              <span>Choose or add a map to start editing its data.</span>
+            </div>
+          ) : (
+            <div className="admin-grid">
+              <div className="admin-card">
+                <div className="panel-heading">
+                  <h2>Map Profile</h2>
+                  <div className="admin-section-toolbar">
+                    <button type="button" onClick={() => void deleteSelectedMap()}>
+                      Delete map
+                    </button>
+                    <button type="button" onClick={() => void saveSelectedMapProfile()}>
+                      Save profile
+                    </button>
+                  </div>
+                </div>
+
+                <div className="admin-fields">
+                  <label>
+                    <span>Map name</span>
+                    <input
+                      value={mapDraft.name}
+                      onChange={(event) => updateMapDraftField("name", event.target.value)}
+                    />
+                  </label>
+                  <label>
+                    <span>Mode</span>
+                    <input
+                      value={mapDraft.mode}
+                      onChange={(event) => updateMapDraftField("mode", event.target.value)}
+                    />
+                  </label>
+                  <label>
+                    <span>Image</span>
+                    <input
+                      value={mapDraft.image}
+                      onChange={(event) => updateMapDraftField("image", event.target.value)}
+                    />
+                  </label>
+                </div>
+              </div>
+
+              <div className="admin-card">
+                <div className="panel-heading">
+                  <h2>Map Weights</h2>
+                  <span>Scoring bias</span>
+                </div>
+                <div className="admin-fields compact">
+                  {weightKeys.map((field) => (
+                    <label key={field}>
+                      <span>{field}</span>
+                      <input
+                        type="text"
+                        inputMode="decimal"
+                        value={profileDraft.weights[field] ?? ""}
+                        onChange={(event) => updateProfileWeight(field, event.target.value)}
+                      />
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="admin-card">
+                <div className="panel-heading">
+                  <h2>Composition</h2>
+                  <button type="button" onClick={addCompositionRow}>
+                    Add row
+                  </button>
+                </div>
+                <div className="admin-composition-list">
+                  {profileDraft.composition.map((row) => (
+                    <div className="admin-composition-row" key={row.id}>
+                      <input
+                        value={row.tags}
+                        onChange={(event) => updateCompositionRow(row.id, "tags", event.target.value)}
+                        placeholder="agro or pressure"
+                      />
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        value={row.count}
+                        onChange={(event) => updateCompositionRow(row.id, "count", event.target.value)}
+                        placeholder="1"
+                      />
+                      <input
+                        type="text"
+                        inputMode="decimal"
+                        value={row.weight}
+                        onChange={(event) => updateCompositionRow(row.id, "weight", event.target.value)}
+                        placeholder="1"
+                      />
+                      <input
+                        value={row.notes}
+                        onChange={(event) => updateCompositionRow(row.id, "notes", event.target.value)}
+                        placeholder="Notes"
+                      />
+                      <button type="button" onClick={() => removeCompositionRow(row.id)}>
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="admin-card admin-brawler-editor">
+                <div className="panel-heading">
+                  <h2>Brawler Profile</h2>
+                  <span>{filteredBrawlers.length} brawlers</span>
+                </div>
+
+                <div className="admin-brawler-shell">
+                  <aside className="admin-brawler-list">
+                    <label className="admin-search">
+                      <span>Search brawlers</span>
+                      <input
+                        value={brawlerSearch}
+                        onChange={(event) => setBrawlerSearch(event.target.value)}
+                        placeholder="Filter brawlers"
+                      />
+                    </label>
+                    <div className="admin-list">
+                      {filteredBrawlers.map((brawler) => (
+                        <button
+                          className={"admin-list-item" + (selectedBrawlerName === brawler.name ? " selected" : "")}
+                          key={brawler.name}
+                          onClick={() => setSelectedBrawlerName(brawler.name)}
+                          type="button"
+                        >
+                          <strong>{brawler.name}</strong>
+                          <span>{brawler.rarity}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </aside>
+
+                  {selectedBrawler ? (
+                    <div className="admin-brawler-form">
+                      <div className="admin-fields">
+                        <label>
+                          <span>Map fit</span>
+                          <input
+                            type="text"
+                            inputMode="decimal"
+                            value={selectedBrawlerDraft?.mapFit ?? ""}
+                            onChange={(event) => updateSelectedBrawlerDraft("mapFit", event.target.value)}
+                          />
+                        </label>
+                        <label>
+                          <span>Versatility</span>
+                          <input
+                            type="text"
+                            inputMode="decimal"
+                            value={selectedBrawlerDraft?.versatility ?? ""}
+                            onChange={(event) => updateSelectedBrawlerDraft("versatility", event.target.value)}
+                          />
+                        </label>
+                        <label>
+                          <span>Tags</span>
+                          <input
+                            value={selectedBrawlerDraft?.tags ?? ""}
+                            onChange={(event) => updateSelectedBrawlerDraft("tags", event.target.value)}
+                            placeholder="tank-counter or flex"
+                          />
+                        </label>
+                      </div>
+
+                      <div className="admin-fields compact">
+                        <label>
+                          <span>Stage - early</span>
+                          <input
+                            type="text"
+                            inputMode="decimal"
+                            value={selectedBrawlerDraft?.stageEarly ?? ""}
+                            onChange={(event) => updateSelectedBrawlerDraft("stageEarly", event.target.value)}
+                          />
+                        </label>
+                        <label>
+                          <span>Stage - mid</span>
+                          <input
+                            type="text"
+                            inputMode="decimal"
+                            value={selectedBrawlerDraft?.stageMid ?? ""}
+                            onChange={(event) => updateSelectedBrawlerDraft("stageMid", event.target.value)}
+                          />
+                        </label>
+                        <label>
+                          <span>Stage - late</span>
+                          <input
+                            type="text"
+                            inputMode="decimal"
+                            value={selectedBrawlerDraft?.stageLate ?? ""}
+                            onChange={(event) => updateSelectedBrawlerDraft("stageLate", event.target.value)}
+                          />
+                        </label>
+                      </div>
+
+                      <div className="admin-textareas">
+                        <label>
+                          <span>Synergy</span>
+                          <textarea
+                            value={selectedBrawlerDraft?.synergy ?? ""}
+                            onChange={(event) => updateSelectedBrawlerDraft("synergy", event.target.value)}
+                            rows={8}
+                            placeholder="Meeple: 8"
+                          />
+                        </label>
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+
+              <details className="admin-card admin-raw-profile">
+                <summary>Raw profile</summary>
+                <textarea className="admin-json" readOnly value={JSON.stringify(selectedProfileJson, null, 2)} rows={28} />
+              </details>
+            </div>
+          )}
+        </section>
+      </section>
+
+      <footer className="app-footer admin-footer">
+        <span>Edits save locally in this browser and then sync to Supabase.</span>
+        <button type="button" onClick={onBackToDraft}>
+          Return to Draft
+        </button>
+      </footer>
+    </main>
+  )
+}

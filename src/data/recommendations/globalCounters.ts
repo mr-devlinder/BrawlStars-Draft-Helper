@@ -1,3 +1,5 @@
+import { loadStoredGlobalCounters } from "../adminStore"
+
 export type GlobalCounterEntry = {
   counters: Partial<Record<string, number>>
   favoredInto?: Partial<Record<string, number>>
@@ -2297,8 +2299,13 @@ Sirius: {
 }
 
 export function getGlobalCounterScore(candidateName: string, enemyNames: string[]) {
+  const runtimeMatrix = {
+    ...globalCounterMatrix,
+    ...loadStoredGlobalCounters(),
+  }
+
   const matches = enemyNames
-    .map((enemyName) => globalCounterMatrix[enemyName]?.counters?.[candidateName])
+    .map((enemyName) => runtimeMatrix[enemyName]?.counters?.[candidateName])
     .filter((value): value is number => typeof value === "number")
 
   if (matches.length === 0) return 0
@@ -2307,7 +2314,11 @@ export function getGlobalCounterScore(candidateName: string, enemyNames: string[
 }
 
 export function getGlobalFavorScore(candidateName: string, enemyNames: string[]) {
-  const entry = globalCounterMatrix[candidateName]
+  const runtimeMatrix = {
+    ...globalCounterMatrix,
+    ...loadStoredGlobalCounters(),
+  }
+  const entry = runtimeMatrix[candidateName]
   if (!entry?.favoredInto) return 0
 
   const matches = enemyNames

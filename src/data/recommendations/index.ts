@@ -1,4 +1,5 @@
 import { createMapRecommendationProfile } from "./base"
+import { loadStoredProfileOverrides } from "../adminStore"
 import type { MapRecommendationProfile } from "./types"
 
 const profileModules = import.meta.glob("./maps/*.ts", {
@@ -21,5 +22,23 @@ export const fallbackProfile = createMapRecommendationProfile({
 
 export function getRecommendationProfile(mapName: string | null | undefined) {
   if (!mapName) return fallbackProfile
-  return recommendationProfiles[mapName] ?? fallbackProfile
+
+  const baseProfile = recommendationProfiles[mapName] ?? fallbackProfile
+  const storedOverrides = loadStoredProfileOverrides()
+  const override = storedOverrides[mapName]
+
+  if (!override) return baseProfile
+
+  return createMapRecommendationProfile({
+    ...baseProfile,
+    ...override,
+    weights: {
+      ...(baseProfile.weights ?? {}),
+      ...(override.weights ?? {}),
+    },
+    brawlers: {
+      ...(baseProfile.brawlers ?? {}),
+      ...(override.brawlers ?? {}),
+    },
+  })
 }

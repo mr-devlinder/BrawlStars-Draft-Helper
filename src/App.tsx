@@ -1,9 +1,20 @@
-import { useEffect, useMemo, useState } from "react"
-import { maps, type GameMap } from "./data/maps"
+import { useEffect, useMemo, useState, type FormEvent } from "react"
+import { maps as defaultMaps, type GameMap } from "./data/maps"
 import { brawlers, type Brawler } from "./data/brawlers"
 import { getDraftRecommendations } from "./data/recommendations/engine"
 import type { DraftState } from "./data/recommendations/types"
+import {
+  clearAdminSession,
+  bootstrapRuntimeData,
+  isSupabaseAdminConfigured,
+  loadAdminSession,
+  loadStoredMaps,
+  saveAdminSession,
+  saveStoredMaps,
+  signInAdmin,
+} from "./data/adminStore"
 import BrawlerCard from "./components/BrawlerCard"
+import AdminDashboard from "./components/AdminDashboard"
 import DraftBoard from "./components/DraftBoard"
 import TopBar from "./components/TopBar"
 
@@ -29,6 +40,9 @@ const draftTemplate: DraftStep[] = [
   { team: "red", count: 1 },
 ]
 
+const ADMIN_USERNAME = "admin"
+const ADMIN_PASSWORD = "draftboard"
+
 function getDraftOrder(startingTeam: Team): Team[] {
   const order: Team[] = []
 
@@ -48,12 +62,39 @@ function getBanTeam(actionCount: number): Team {
 }
 
 function App() {
-  const [selectedMap, setSelectedMap] = useState<GameMap | null>(null)
+  const [runtimeMaps, setRuntimeMaps] = useState<Record<string, GameMap>>(() => loadStoredMaps(defaultMaps))
+  const [selectedMapName, setSelectedMapName] = useState<string | null>(null)
   const [isMapPreviewOpen, setIsMapPreviewOpen] = useState(false)
   const [mapSearch, setMapSearch] = useState("")
   const [brawlerSearch, setBrawlerSearch] = useState("")
   const [startingTeam, setStartingTeam] = useState<Team>("blue")
   const [actions, setActions] = useState<DraftAction[]>([])
+  const [view, setView] = useState<"draft" | "admin">("draft")
+  const [isAdminAuthed, setIsAdminAuthed] = useState(() => Boolean(loadAdminSession()))
+  const [showLogin, setShowLogin] = useState(false)
+  const [loginUsername, setLoginUsername] = useState("")
+  const [loginPassword, setLoginPassword] = useState("")
+  const [loginError, setLoginError] = useState("")
+  const [isHydrated, setIsHydrated] = useState(false)
+
+  useEffect(() => {
+    if (!isHydrated) return
+    void saveStoredMaps(runtimeMaps)
+  }, [runtimeMaps, isHydrated])
+
+  useEffect(() => {
+    void bootstrapRuntimeData(defaultMaps).then((data) => {
+      setRuntimeMaps(data.maps)
+      setSelectedMapName((current) => (current && data.maps[current] ? current : null))
+      setIsHydrated(true)
+    })
+  }, [])
+
+  useEffect(() => {
+    if (selectedMapName && !runtimeMaps[selectedMapName]) {
+      setSelectedMapName(null)
+    }
+  }, [runtimeMaps, selectedMapName])
 
   const draftOrder = useMemo(() => getDraftOrder(startingTeam), [startingTeam])
   const banActions = actions.filter((action) => action.phase === "bans")
@@ -65,9 +106,25 @@ function App() {
   const phase: Phase = banActions.length < 6 ? "bans" : pickActions.length < 6 ? "picks" : "complete"
   const currentTeam: Team | null = phase === "bans" ? getBanTeam(banActions.length) : phase === "picks" ? draftOrder[pickActions.length] : null
 
-  const filteredMaps = Object.values(maps).filter((map) =>
+  const selectedMap = selectedMapName ? runtimeMaps[selectedMapName] ?? null : null
+
+  const filteredMaps = Object.values(runtimeMaps).filter((map) =>
     (map.name + " " + map.mode).toLowerCase().includes(mapSearch.toLowerCase()),
   )
+
+  const groupedMaps = useMemo(() => {
+    const groups = filteredMaps.reduce<Record<string, GameMap[]>>((acc, map) => {
+      const key = map.mode || "Other"
+      if (!acc[key]) acc[key] = []
+      acc[key].push(map)
+      return acc
+    }, {})
+
+    return Object.entries(groups).map(([mode, maps]) => ({
+      mode,
+      maps,
+    }))
+  }, [filteredMaps])
 
   const filteredBrawlers = brawlers.filter((brawler) =>
     brawler.name.toLowerCase().includes(brawlerSearch.toLowerCase()),
@@ -77,7 +134,7 @@ function App() {
 
   function resetDraft(nextStartingTeam = startingTeam) {
     setStartingTeam(nextStartingTeam)
-    setSelectedMap(null)
+    setSelectedMapName(null)
     setActions([])
     setMapSearch("")
     setBrawlerSearch("")
@@ -85,7 +142,7 @@ function App() {
   }
 
   function selectMap(map: GameMap) {
-    setSelectedMap(map)
+    setSelectedMapName(map.name)
     setMapSearch("")
     setIsMapPreviewOpen(false)
   }
@@ -112,10 +169,66 @@ function App() {
     resetDraft(team)
   }
 
+  function openAdmin() {
+    if (isAdminAuthed) {
+      setView("admin")
+      return
+    }
+
+    setLoginError("")
+    setShowLogin(true)
+  }
+
+  async function handleLoginSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+
+    try {
+      if (isSupabaseAdminConfigured()) {
+        await signInAdmin(loginUsername, loginPassword)
+        setIsAdminAuthed(true)
+        setView("admin")
+        setShowLogin(false)
+        setLoginPassword("")
+        setLoginError("")
+        return
+      }
+
+      if (loginUsername === ADMIN_USERNAME && loginPassword === ADMIN_PASSWORD) {
+        saveAdminSession({
+          access_token: "local-demo",
+          refresh_token: "local-demo",
+          expires_at: Math.floor(Date.now() / 1000) + 60 * 60 * 24,
+          user: { id: "local-demo", email: loginUsername },
+        })
+        setIsAdminAuthed(true)
+        setView("admin")
+        setShowLogin(false)
+        setLoginPassword("")
+        setLoginError("")
+        return
+      }
+
+      setLoginError("Invalid credentials.")
+    } catch (error) {
+      setLoginError(error instanceof Error ? error.message : "Login failed.")
+    }
+  }
+
+  function handleLogout() {
+    clearAdminSession()
+    setIsAdminAuthed(false)
+    setView("draft")
+    setShowLogin(false)
+    setLoginUsername("")
+    setLoginPassword("")
+    setLoginError("")
+  }
+
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
         setIsMapPreviewOpen(false)
+        setShowLogin(false)
       }
     }
 
@@ -156,6 +269,18 @@ function App() {
       draftState.redBans,
     ],
   )
+
+  if (view === "admin" && isAdminAuthed) {
+    return (
+      <AdminDashboard
+        maps={runtimeMaps}
+        onMapsChange={setRuntimeMaps}
+        onBackToDraft={() => setView("draft")}
+        onLogout={handleLogout}
+      />
+    )
+  }
+
   return (
     <main className="app">
       <TopBar
@@ -221,20 +346,47 @@ function App() {
             <h2>Maps</h2>
             <span>{filteredMaps.length}</span>
           </div>
-          <div className="map-list">
-            {filteredMaps.map((map) => (
-              <button
-                className={"map-option" + (selectedMap?.name === map.name ? " selected" : "")}
-                key={map.name}
-                onClick={() => selectMap(map)}
-                type="button"
-              >
-                <img src={map.image} alt="" />
-                <span>{map.name}</span>
-                <small>{map.mode}</small>
-              </button>
-            ))}
-          </div>
+          {mapSearch.trim() ? (
+            <div className="map-list">
+              {filteredMaps.map((map) => (
+                <button
+                  className={"map-option" + (selectedMap?.name === map.name ? " selected" : "")}
+                  key={map.name}
+                  onClick={() => selectMap(map)}
+                  type="button"
+                >
+                  <img src={map.image} alt="" />
+                  <span>{map.name}</span>
+                  <small>{map.mode}</small>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="map-groups">
+              {groupedMaps.map((group) => (
+                <section className="map-group" key={group.mode}>
+                  <div className="panel-heading map-group-heading">
+                    <h3>{group.mode}</h3>
+                    <span>{group.maps.length}</span>
+                  </div>
+                  <div className="map-group-grid">
+                    {group.maps.map((map) => (
+                      <button
+                        className={"map-option" + (selectedMap?.name === map.name ? " selected" : "")}
+                        key={map.name}
+                        onClick={() => selectMap(map)}
+                        type="button"
+                      >
+                        <img src={map.image} alt="" />
+                        <span>{map.name}</span>
+                        <small>{map.mode}</small>
+                      </button>
+                    ))}
+                  </div>
+                </section>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="panel brawler-picker">
@@ -255,6 +407,36 @@ function App() {
         </div>
       </section>
 
+      <footer className="app-footer">
+        <span>Draft Helper</span>
+        <button type="button" onClick={openAdmin}>
+          Admin Login
+        </button>
+      </footer>
+
+      {showLogin ? (
+        <div className="login-backdrop" onClick={() => setShowLogin(false)} role="presentation">
+          <form className="login-modal" onClick={(event) => event.stopPropagation()} onSubmit={handleLoginSubmit}>
+            <div className="panel-heading">
+              <h2>Admin Login</h2>
+              <button type="button" className="map-preview-close" onClick={() => setShowLogin(false)} aria-label="Close login">
+                x
+              </button>
+            </div>
+            <label>
+              <span>Username</span>
+              <input value={loginUsername} onChange={(event) => setLoginUsername(event.target.value)} />
+            </label>
+            <label>
+              <span>Password</span>
+              <input type="password" value={loginPassword} onChange={(event) => setLoginPassword(event.target.value)} />
+            </label>
+            {loginError ? <div className="login-error">{loginError}</div> : null}
+            <button type="submit">Log in</button>
+          </form>
+        </div>
+      ) : null}
+
       {selectedMap && isMapPreviewOpen ? (
         <div
           className="map-preview-backdrop"
@@ -270,7 +452,7 @@ function App() {
               type="button"
               aria-label="Close map preview"
             >
-              ×
+              x
             </button>
             <img src={selectedMap.image} alt={selectedMap.name} />
             <div className="map-preview-caption">
@@ -280,7 +462,6 @@ function App() {
           </div>
         </div>
       ) : null}
-
     </main>
   )
 }
