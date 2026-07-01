@@ -3,10 +3,10 @@ import { brawlers, type Brawler } from "../data/brawlers"
 import { createMapRecommendationProfile } from "../data/recommendations/base"
 import { getRecommendationProfile } from "../data/recommendations"
 import type { GameMap } from "../data/maps"
-import type { GlobalCounterMatrix } from "../data/recommendations/globalCounters"
 import type {
   BrawlerMapData,
   CompositionNeed,
+  GlobalCounterMatrix,
   MapRecommendationProfile,
   MapRecommendationWeights,
 } from "../data/recommendations/types"

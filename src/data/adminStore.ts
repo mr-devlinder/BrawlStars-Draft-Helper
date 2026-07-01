@@ -1,6 +1,5 @@
 import type { GameMap } from "./maps"
-import type { GlobalCounterMatrix } from "./recommendations/globalCounters"
-import type { MapRecommendationProfile } from "./recommendations/types"
+import type { GlobalCounterMatrix, MapRecommendationProfile } from "./recommendations/types"
 import {
   isSupabaseConfigured,
   loadAllConfigRows,

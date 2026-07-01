@@ -10,6 +10,13 @@ export type StageBias = {
   late?: number
 }
 
+export type GlobalCounterEntry = {
+  counters: Partial<Record<string, number>>
+  favoredInto?: Partial<Record<string, number>>
+}
+
+export type GlobalCounterMatrix = Partial<Record<string, GlobalCounterEntry>>
+
 export type CompositionNeed = {
   tag?: string
   tags?: string[]

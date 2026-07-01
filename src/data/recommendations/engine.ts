@@ -1,9 +1,10 @@
 import { brawlers } from "../brawlers"
-import { getGlobalCounterScore, getGlobalFavorScore } from "./globalCounters"
 import { getRecommendationProfile } from "./index"
+import { loadStoredGlobalCounters } from "../adminStore"
 import type {
   BrawlerMapData,
   DraftState,
+  GlobalCounterMatrix,
   RecommendationBreakdown,
   RecommendationResult,
 } from "./types"
@@ -52,6 +53,33 @@ function resolveCurrentTeam(state: DraftState) {
   }
 
   return state.turnOrder[state.pickIndex] ?? null
+}
+
+function getGlobalMatrix(): GlobalCounterMatrix {
+  return loadStoredGlobalCounters()
+}
+
+function getGlobalCounterScore(candidateName: string, enemyNames: string[]) {
+  const matrix = getGlobalMatrix()
+  const entry = matrix[candidateName]
+  if (!entry) return 0
+
+  const values = enemyNames
+    .map((enemyName) => entry.counters?.[enemyName])
+    .filter((value): value is number => typeof value === "number")
+
+  if (values.length === 0) return 0
+  return values.reduce((sum, value) => sum + value, 0) / values.length
+}
+
+function getGlobalFavorScore(candidateName: string, enemyNames: string[]) {
+  const matrix = getGlobalMatrix()
+  const values = enemyNames
+    .map((enemyName) => matrix[candidateName]?.favoredInto?.[enemyName])
+    .filter((value): value is number => typeof value === "number")
+
+  if (values.length === 0) return 0
+  return values.reduce((sum, value) => sum + value, 0) / values.length
 }
 
 function evaluateEntry(
