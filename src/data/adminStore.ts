@@ -17,14 +17,24 @@ import {
 const MAPS_KEY = "brawldraft.admin.maps.v1"
 const PROFILES_KEY = "brawldraft.admin.profiles.v1"
 const GLOBAL_COUNTERS_KEY = "brawldraft.admin.globalCounters.v1"
+const ANNOUNCEMENT_KEY = "brawldraft.admin.announcement.v1"
 const ADMIN_SESSION_KEY = "brawldraft.admin.session.v1"
 
 const SUPABASE_ADMIN_EMAIL = import.meta.env.VITE_SUPABASE_ADMIN_EMAIL as string | undefined
+
+export type AnnouncementConfig = {
+  active: boolean
+  message: string
+}
 
 let mapsCache: Record<string, GameMap> = readJson<Record<string, GameMap>>(MAPS_KEY) ?? {}
 let profilesCache: Record<string, MapRecommendationProfile> =
   readJson<Record<string, MapRecommendationProfile>>(PROFILES_KEY) ?? {}
 let globalCountersCache: GlobalCounterMatrix = readJson<GlobalCounterMatrix>(GLOBAL_COUNTERS_KEY) ?? {}
+let announcementCache: AnnouncementConfig = readJson<AnnouncementConfig>(ANNOUNCEMENT_KEY) ?? {
+  active: false,
+  message: "",
+}
 let adminSessionCache: SupabaseSession | null = readSupabaseSession(ADMIN_SESSION_KEY)
 
 export function loadStoredMaps(defaultMaps: Record<string, GameMap>) {
@@ -37,6 +47,10 @@ export function loadStoredProfileOverrides() {
 
 export function loadStoredGlobalCounters() {
   return globalCountersCache
+}
+
+export function loadStoredAnnouncement() {
+  return announcementCache
 }
 
 export function loadAdminSession() {
@@ -75,12 +89,14 @@ export async function bootstrapRuntimeData(defaultMaps: Record<string, GameMap>)
   mapsCache = Object.keys(mapsCache).length > 0 ? mapsCache : defaultMaps
   profilesCache = profilesCache ?? {}
   globalCountersCache = globalCountersCache ?? {}
+  announcementCache = announcementCache ?? { active: false, message: "" }
 
   if (!isSupabaseConfigured()) {
     return {
       maps: mapsCache,
       profiles: profilesCache,
       globalCounters: globalCountersCache,
+      announcement: announcementCache,
     }
   }
 
@@ -89,6 +105,7 @@ export async function bootstrapRuntimeData(defaultMaps: Record<string, GameMap>)
     const nextMaps = rows.find((row) => row.key === "maps")?.value as Record<string, GameMap> | undefined
     const nextProfiles = rows.find((row) => row.key === "profiles")?.value as Record<string, MapRecommendationProfile> | undefined
     const nextGlobalCounters = rows.find((row) => row.key === "globalCounters")?.value as GlobalCounterMatrix | undefined
+    const nextAnnouncement = rows.find((row) => row.key === "announcement")?.value as AnnouncementConfig | undefined
 
     if (nextMaps) {
       mapsCache = nextMaps
@@ -102,6 +119,13 @@ export async function bootstrapRuntimeData(defaultMaps: Record<string, GameMap>)
       globalCountersCache = nextGlobalCounters
       writeJson(GLOBAL_COUNTERS_KEY, nextGlobalCounters)
     }
+    if (nextAnnouncement) {
+      announcementCache = {
+        active: Boolean(nextAnnouncement.active),
+        message: typeof nextAnnouncement.message === "string" ? nextAnnouncement.message : "",
+      }
+      writeJson(ANNOUNCEMENT_KEY, announcementCache)
+    }
   } catch {
     // Keep local cached data if Supabase is unavailable.
   }
@@ -110,6 +134,7 @@ export async function bootstrapRuntimeData(defaultMaps: Record<string, GameMap>)
     maps: mapsCache,
     profiles: profilesCache,
     globalCounters: globalCountersCache,
+    announcement: announcementCache,
   }
 }
 
@@ -146,6 +171,20 @@ export async function saveStoredGlobalCounters(matrix: GlobalCounterMatrix) {
   await upsertConfigRow("globalCounters", matrix, session.access_token)
 }
 
+export async function saveStoredAnnouncement(config: AnnouncementConfig) {
+  announcementCache = {
+    active: Boolean(config.active),
+    message: config.message,
+  }
+  writeJson(ANNOUNCEMENT_KEY, announcementCache)
+
+  if (!isSupabaseConfigured()) return
+  const session = await resolveSession()
+  if (!session) return
+
+  await upsertConfigRow("announcement", announcementCache, session.access_token)
+}
+
 export async function signInAdmin(email: string, password: string) {
   const session = await signInWithPassword(email, password)
 
@@ -175,4 +214,8 @@ export function updateRuntimeProfilesCache(profiles: Record<string, MapRecommend
 
 export function updateRuntimeGlobalCountersCache(matrix: GlobalCounterMatrix) {
   globalCountersCache = matrix
+}
+
+export function updateRuntimeAnnouncementCache(config: AnnouncementConfig) {
+  announcementCache = config
 }

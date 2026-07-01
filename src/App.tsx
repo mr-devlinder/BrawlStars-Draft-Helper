@@ -8,6 +8,7 @@ import {
   bootstrapRuntimeData,
   isSupabaseAdminConfigured,
   loadAdminSession,
+  loadStoredAnnouncement,
   loadStoredMaps,
   saveAdminSession,
   saveStoredMaps,
@@ -76,6 +77,8 @@ function App() {
   const [loginPassword, setLoginPassword] = useState("")
   const [loginError, setLoginError] = useState("")
   const [isHydrated, setIsHydrated] = useState(false)
+  const [announcement, setAnnouncement] = useState(() => loadStoredAnnouncement())
+  const [showAnnouncement, setShowAnnouncement] = useState(false)
 
   useEffect(() => {
     if (!isHydrated) return
@@ -86,6 +89,8 @@ function App() {
     void bootstrapRuntimeData(defaultMaps).then((data) => {
       setRuntimeMaps(data.maps)
       setSelectedMapName((current) => (current && data.maps[current] ? current : null))
+      setAnnouncement(data.announcement)
+      setShowAnnouncement(Boolean(data.announcement.active && data.announcement.message.trim()))
       setIsHydrated(true)
     })
   }, [])
@@ -413,6 +418,31 @@ function App() {
           Admin Login
         </button>
       </footer>
+
+      {showAnnouncement && announcement.active && announcement.message.trim() ? (
+        <div
+          className="announcement-backdrop"
+          onClick={() => setShowAnnouncement(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="App announcement"
+        >
+          <div className="announcement-modal" onClick={(event) => event.stopPropagation()}>
+            <button
+              className="map-preview-close"
+              onClick={() => setShowAnnouncement(false)}
+              type="button"
+              aria-label="Close announcement"
+            >
+              x
+            </button>
+            <div className="panel-heading">
+              <h2>Announcement</h2>
+            </div>
+            <p>{announcement.message}</p>
+          </div>
+        </div>
+      ) : null}
 
       {showLogin ? (
         <div className="login-backdrop" onClick={() => setShowLogin(false)} role="presentation">

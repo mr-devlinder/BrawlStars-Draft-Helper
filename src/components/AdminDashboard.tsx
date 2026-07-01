@@ -11,8 +11,10 @@ import type {
   MapRecommendationWeights,
 } from "../data/recommendations/types"
 import {
+  loadStoredAnnouncement,
   loadStoredGlobalCounters,
   loadStoredProfileOverrides,
+  saveStoredAnnouncement,
   saveStoredGlobalCounters,
   saveStoredProfileOverrides,
 } from "../data/adminStore"
@@ -57,6 +59,11 @@ type SyncState = {
   state: "idle" | "saving" | "saved" | "error"
   message: string
   details?: string
+}
+
+type AnnouncementDraft = {
+  active: boolean
+  message: string
 }
 
 type WeightKey = keyof MapRecommendationWeights
@@ -284,6 +291,7 @@ export default function AdminDashboard({ maps, onMapsChange, onBackToDraft, onLo
   const [globalSearch, setGlobalSearch] = useState("")
   const [profiles, setProfiles] = useState<Record<string, MapRecommendationProfile>>(() => loadStoredProfileOverrides())
   const [globalCounters, setGlobalCounters] = useState<GlobalCounterMatrix>(() => loadStoredGlobalCounters())
+  const [announcementDraft, setAnnouncementDraft] = useState<AnnouncementDraft>(() => loadStoredAnnouncement())
   const [mapDraft, setMapDraft] = useState({ name: "", mode: "", image: "" })
   const [profileDraft, setProfileDraft] = useState<ProfileDraft>(() =>
     buildProfileDraft(getRecommendationProfile(getFirstMapName(maps) || undefined)),
@@ -296,6 +304,7 @@ export default function AdminDashboard({ maps, onMapsChange, onBackToDraft, onLo
   const [newMapMode, setNewMapMode] = useState("Brawl Ball")
   const [newMapImage, setNewMapImage] = useState("")
   const [importInputKey, setImportInputKey] = useState(0)
+  const [showAnnouncementEditor, setShowAnnouncementEditor] = useState(false)
   const profileImportRef = useRef<HTMLInputElement | null>(null)
   const [syncState, setSyncState] = useState<SyncState>({
     state: "idle",
@@ -334,6 +343,10 @@ export default function AdminDashboard({ maps, onMapsChange, onBackToDraft, onLo
   useEffect(() => {
     setGlobalDraft(buildGlobalDraft(globalCounters))
   }, [globalCounters])
+
+  useEffect(() => {
+    setAnnouncementDraft(loadStoredAnnouncement())
+  }, [])
 
   const filteredMaps = useMemo(
     () =>
@@ -552,6 +565,16 @@ export default function AdminDashboard({ maps, onMapsChange, onBackToDraft, onLo
     await commitGlobalCounters(nextMatrix)
   }
 
+  async function saveAnnouncementDraft() {
+    setSync("saving", "Saving announcement...")
+    try {
+      await saveStoredAnnouncement(announcementDraft)
+      setSync("saved", announcementDraft.active ? "Announcement enabled" : "Announcement disabled")
+    } catch (error) {
+      setSync("error", "Could not save announcement", formatSyncError(error))
+    }
+  }
+
   async function createNewMap() {
     const nextName = makeUniqueMapName(newMapName.trim() || "New Map", maps)
     const nextMode = newMapMode.trim() || "Brawl Ball"
@@ -644,6 +667,9 @@ export default function AdminDashboard({ maps, onMapsChange, onBackToDraft, onLo
         </div>
 
         <div className="actions">
+          <button type="button" onClick={() => setShowAnnouncementEditor(true)}>
+            Announcement
+          </button>
           <button type="button" onClick={onBackToDraft}>
             Back
           </button>
@@ -1030,6 +1056,47 @@ export default function AdminDashboard({ maps, onMapsChange, onBackToDraft, onLo
           )}
         </section>
       </section>
+
+      {showAnnouncementEditor ? (
+        <div className="announcement-backdrop" onClick={() => setShowAnnouncementEditor(false)} role="presentation">
+          <div className="announcement-modal admin-announcement-modal" onClick={(event) => event.stopPropagation()}>
+            <div className="panel-heading">
+              <h2>Announcement</h2>
+              <button type="button" className="map-preview-close" onClick={() => setShowAnnouncementEditor(false)} aria-label="Close announcement editor">
+                x
+              </button>
+            </div>
+
+            <label className="admin-switch-row">
+              <span>Active</span>
+              <label className="admin-switch">
+                <input
+                  type="checkbox"
+                  checked={announcementDraft.active}
+                  onChange={(event) => setAnnouncementDraft((current) => ({ ...current, active: event.target.checked }))}
+                />
+                <span />
+              </label>
+            </label>
+
+            <label className="admin-stack">
+              <span>Message</span>
+              <textarea
+                rows={8}
+                value={announcementDraft.message}
+                onChange={(event) => setAnnouncementDraft((current) => ({ ...current, message: event.target.value }))}
+                placeholder="Write the message people should see when they open the app"
+              />
+            </label>
+
+            <div className="admin-raw-actions">
+              <button type="button" onClick={() => void saveAnnouncementDraft()}>
+                Save announcement
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <footer className="app-footer admin-footer">
         <span>Edits save locally in this browser and then sync to Supabase.</span>

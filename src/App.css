@@ -796,6 +796,36 @@ input:focus {
   font-size: 13px;
 }
 
+.announcement-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 72;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(7, 9, 13, 0.78);
+  backdrop-filter: blur(8px);
+}
+
+.announcement-modal {
+  position: relative;
+  width: min(560px, 92vw);
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid #303544;
+  border-radius: 8px;
+  background: #11141b;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+}
+
+.announcement-modal p {
+  margin: 0;
+  color: #dce2ee;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
 .admin-app {
   padding-bottom: 24px;
 }
@@ -964,6 +994,70 @@ input:focus {
   align-items: center;
   justify-content: flex-end;
   flex-wrap: wrap;
+}
+
+.admin-switch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.admin-switch {
+  position: relative;
+  width: 48px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.admin-switch input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  margin: 0;
+}
+
+.admin-switch span {
+  width: 100%;
+  height: 100%;
+  border-radius: 999px;
+  border: 1px solid #3a4254;
+  background: #242936;
+  position: relative;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.admin-switch span::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #f6f8fb;
+  transition: transform 0.15s ease;
+}
+
+.admin-switch input:checked + span {
+  background: rgba(47, 141, 255, 0.26);
+  border-color: #2f8dff;
+}
+
+.admin-switch input:checked + span::after {
+  transform: translateX(22px);
+}
+
+.admin-announcement-modal textarea {
+  width: 100%;
+  min-height: 160px;
+  resize: vertical;
+  border: 1px solid #303544;
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: #f6f8fb;
+  background: rgba(20, 23, 31, 0.92);
 }
 
 .admin-fields,
