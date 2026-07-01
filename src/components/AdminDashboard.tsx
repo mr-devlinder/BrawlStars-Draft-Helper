@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react"
 import { brawlers, type Brawler } from "../data/brawlers"
 import { createMapRecommendationProfile } from "../data/recommendations/base"
 import { getRecommendationProfile } from "../data/recommendations"
@@ -119,6 +119,16 @@ function parseNumber(value: string, fallback = 0) {
 function formatSyncError(error: unknown) {
   const raw = error instanceof Error ? error.message : String(error)
   return raw.replace(/\s+/g, " ").trim().slice(0, 180)
+}
+
+function isMapRecommendationProfile(value: unknown): value is MapRecommendationProfile {
+  return Boolean(
+    value &&
+      typeof value === "object" &&
+      typeof (value as MapRecommendationProfile).mapName === "string" &&
+      typeof (value as MapRecommendationProfile).mode === "string" &&
+      typeof (value as MapRecommendationProfile).brawlers === "object",
+  )
 }
 
 function buildBrawlerDraft(entry?: BrawlerMapData): BrawlerDraft {
@@ -281,9 +291,12 @@ export default function AdminDashboard({ maps, onMapsChange, onBackToDraft, onLo
   const [globalDraft, setGlobalDraft] = useState<Record<string, GlobalDraftEntry>>(() =>
     buildGlobalDraft(loadStoredGlobalCounters()),
   )
+  const [importProfileError, setImportProfileError] = useState("")
   const [newMapName, setNewMapName] = useState("")
   const [newMapMode, setNewMapMode] = useState("Brawl Ball")
   const [newMapImage, setNewMapImage] = useState("")
+  const [importInputKey, setImportInputKey] = useState(0)
+  const profileImportRef = useRef<HTMLInputElement | null>(null)
   const [syncState, setSyncState] = useState<SyncState>({
     state: "idle",
     message: "Ready",
@@ -452,6 +465,35 @@ export default function AdminDashboard({ maps, onMapsChange, onBackToDraft, onLo
     }))
   }
 
+  async function handleProfileImport(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    try {
+      const text = await file.text()
+      const parsed = JSON.parse(text) as unknown
+
+      if (!isMapRecommendationProfile(parsed)) {
+        throw new Error("That file is not a valid map profile JSON.")
+      }
+
+      const importedProfile = createMapRecommendationProfile(parsed)
+      setMapDraft({
+        name: importedProfile.mapName,
+        mode: importedProfile.mode,
+        image: mapDraft.image,
+      })
+      setProfileDraft(buildProfileDraft(importedProfile))
+      setImportProfileError("")
+      setSync("saved", `Imported ${importedProfile.mapName}`)
+    } catch (error) {
+      setImportProfileError(error instanceof Error ? error.message : "Import failed.")
+      setSync("error", "Could not import profile", formatSyncError(error))
+    } finally {
+      setImportInputKey((current) => current + 1)
+    }
+  }
+
   async function saveSelectedMapProfile() {
     if (!selectedMap) return
 
@@ -569,7 +611,12 @@ export default function AdminDashboard({ maps, onMapsChange, onBackToDraft, onLo
   }
 
   const mapCount = Object.keys(maps).length
-  const selectedProfileJson = selectedMapName ? profiles[selectedMapName] ?? savedProfile : savedProfile
+  const selectedProfileJson = serializeProfileDraft(
+    mapDraft.name.trim() || selectedMapName || savedProfile.mapName,
+    mapDraft.mode.trim() || selectedMap?.mode || savedProfile.mode,
+    profileDraft,
+    selectedMapName ? profiles[selectedMapName] ?? savedProfile : savedProfile,
+  )
   const selectedBrawlerDraft = profileDraft.brawlers[selectedBrawler?.name ?? ""]
 
   return (
@@ -963,6 +1010,20 @@ export default function AdminDashboard({ maps, onMapsChange, onBackToDraft, onLo
 
               <details className="admin-card admin-raw-profile">
                 <summary>Raw profile</summary>
+                <div className="admin-raw-actions">
+                  <input
+                    key={importInputKey}
+                    ref={profileImportRef}
+                    className="admin-hidden-file"
+                    type="file"
+                    accept=".json,application/json"
+                    onChange={(event) => void handleProfileImport(event)}
+                  />
+                  <button type="button" onClick={() => profileImportRef.current?.click()}>
+                    Import JSON
+                  </button>
+                </div>
+                {importProfileError ? <p className="admin-sync-copy">{importProfileError}</p> : null}
                 <textarea className="admin-json" readOnly value={JSON.stringify(selectedProfileJson, null, 2)} rows={28} />
               </details>
             </div>
