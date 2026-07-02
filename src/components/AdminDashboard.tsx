@@ -123,6 +123,57 @@ function parseNumber(value: string, fallback = 0) {
   return Number.isFinite(next) ? next : fallback
 }
 
+function parseRawStatInput(input: string, mapName: string) {
+  const lines = input
+    .replace(/\r\n/g, "\n")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+
+  const brawler = lines[0]?.replace(/:$/, "").trim()
+  if (!brawler) {
+    throw new Error("Paste a brawler block with the brawler name on the first line.")
+  }
+
+  const overallIndex = lines.indexOf("Overall Stats")
+  const mapIndex = lines.indexOf("Performance by Map")
+
+  if (overallIndex === -1 || mapIndex === -1) {
+    throw new Error("The pasted stats need Overall Stats and Performance by Map sections.")
+  }
+
+  const overallScore = Number.parseFloat(lines[overallIndex + 2] ?? "")
+  if (!Number.isFinite(overallScore)) {
+    throw new Error("Could not read the overall score from the pasted stats.")
+  }
+
+  const targetMap = mapName.trim().toLowerCase()
+  let mapFit: number | undefined
+
+  for (let index = mapIndex + 1; index < lines.length; index += 1) {
+    const next = lines[index]
+    if (next.toLowerCase() !== targetMap) continue
+
+    const score = Number.parseFloat(lines[index + 2] ?? "")
+    if (!Number.isFinite(score)) {
+      throw new Error(`Found ${mapName}, but could not read its score.`)
+    }
+
+    mapFit = score
+    break
+  }
+
+  if (typeof mapFit !== "number") {
+    throw new Error(`Could not find the selected map name "${mapName}" in the pasted stats.`)
+  }
+
+  return {
+    brawler,
+    versatility: overallScore,
+    mapFit,
+  }
+}
+
 function formatSyncError(error: unknown) {
   const raw = error instanceof Error ? error.message : String(error)
   return raw.replace(/\s+/g, " ").trim().slice(0, 180)
@@ -243,11 +294,12 @@ function serializeProfileDraft(
   mapName: string,
   mode: string,
   draft: ProfileDraft,
+  sharedWeights: Record<WeightKey, string>,
   baseProfile?: MapRecommendationProfile,
 ): MapRecommendationProfile {
   const weights = weightKeys.reduce((acc, key) => {
     const fallback = baseProfile?.weights?.[key] ?? 1
-    acc[key] = parseNumber(draft.weights[key], fallback)
+    acc[key] = parseNumber(sharedWeights[key], fallback)
     return acc
   }, {} as Partial<Record<WeightKey, number>>)
 
@@ -292,6 +344,13 @@ export default function AdminDashboard({ maps, onMapsChange, onBackToDraft, onLo
   const [profiles, setProfiles] = useState<Record<string, MapRecommendationProfile>>(() => loadStoredProfileOverrides())
   const [globalCounters, setGlobalCounters] = useState<GlobalCounterMatrix>(() => loadStoredGlobalCounters())
   const [announcementDraft, setAnnouncementDraft] = useState<AnnouncementDraft>(() => loadStoredAnnouncement())
+  const [sharedWeights, setSharedWeights] = useState<Record<WeightKey, string>>(() =>
+    weightKeys.reduce((acc, key) => {
+      const saved = getRecommendationProfile(getFirstMapName(maps) || undefined).weights?.[key]
+      acc[key] = numberToInput(saved)
+      return acc
+    }, {} as Record<WeightKey, string>),
+  )
   const [mapDraft, setMapDraft] = useState({ name: "", mode: "", image: "" })
   const [profileDraft, setProfileDraft] = useState<ProfileDraft>(() =>
     buildProfileDraft(getRecommendationProfile(getFirstMapName(maps) || undefined)),
@@ -305,11 +364,28 @@ export default function AdminDashboard({ maps, onMapsChange, onBackToDraft, onLo
   const [newMapImage, setNewMapImage] = useState("")
   const [importInputKey, setImportInputKey] = useState(0)
   const [showAnnouncementEditor, setShowAnnouncementEditor] = useState(false)
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({
+    sharedWeights: false,
+    mapProfile: false,
+    composition: false,
+    brawlerProfile: false,
+    globalMatchups: false,
+    sync: false,
+  })
+  const [rawStatsInput, setRawStatsInput] = useState("")
+  const [rawStatsError, setRawStatsError] = useState("")
   const profileImportRef = useRef<HTMLInputElement | null>(null)
   const [syncState, setSyncState] = useState<SyncState>({
     state: "idle",
     message: "Ready",
   })
+
+  function toggleSection(section: string) {
+    setCollapsedSections((current) => ({
+      ...current,
+      [section]: !current[section],
+    }))
+  }
 
   useEffect(() => {
     const firstMap = getFirstMapName(maps)
@@ -347,6 +423,18 @@ export default function AdminDashboard({ maps, onMapsChange, onBackToDraft, onLo
   useEffect(() => {
     setAnnouncementDraft(loadStoredAnnouncement())
   }, [])
+
+  useEffect(() => {
+    const current = selectedMapName ? profiles[selectedMapName] ?? savedProfile : savedProfile
+    setSharedWeights((existing) => {
+      const next = weightKeys.reduce((acc, key) => {
+        const currentValue = current.weights?.[key]
+        acc[key] = existing[key] ?? numberToInput(currentValue)
+        return acc
+      }, {} as Record<WeightKey, string>)
+      return next
+    })
+  }, [selectedMapName, profiles, savedProfile])
 
   const filteredMaps = useMemo(
     () =>
@@ -409,12 +497,9 @@ export default function AdminDashboard({ maps, onMapsChange, onBackToDraft, onLo
   }
 
   function updateProfileWeight(field: WeightKey, value: string) {
-    setProfileDraft((current) => ({
+    setSharedWeights((current) => ({
       ...current,
-      weights: {
-        ...current.weights,
-        [field]: value,
-      },
+      [field]: value,
     }))
   }
 
@@ -507,6 +592,36 @@ export default function AdminDashboard({ maps, onMapsChange, onBackToDraft, onLo
     }
   }
 
+  function convertRawStats() {
+    try {
+      if (!selectedMap) {
+        throw new Error("Select a map first.")
+      }
+
+      const converted = parseRawStatInput(rawStatsInput, selectedMap.name)
+      if (!selectedBrawler) {
+        throw new Error("Select a brawler first.")
+      }
+
+      setProfileDraft((current) => ({
+        ...current,
+        brawlers: {
+          ...current.brawlers,
+          [selectedBrawler.name]: {
+            ...(current.brawlers[selectedBrawler.name] ?? buildBrawlerDraft()),
+            mapFit: typeof converted.mapFit === "number" ? String(converted.mapFit) : "",
+            versatility: String(converted.versatility),
+          },
+        },
+      }))
+      setRawStatsError("")
+      setSync("saved", "Converted raw stats")
+    } catch (error) {
+      setRawStatsError(error instanceof Error ? error.message : "Conversion failed.")
+      setSync("error", "Could not convert raw stats", formatSyncError(error))
+    }
+  }
+
   async function saveSelectedMapProfile() {
     if (!selectedMap) return
 
@@ -519,7 +634,7 @@ export default function AdminDashboard({ maps, onMapsChange, onBackToDraft, onLo
       mode: nextMode,
       image: nextImage,
     }
-    const nextProfile = serializeProfileDraft(nextName, nextMode, profileDraft, savedProfile)
+    const nextProfile = serializeProfileDraft(nextName, nextMode, profileDraft, sharedWeights, savedProfile)
 
     const nextMaps = { ...maps }
     const nextProfiles = { ...profiles }
@@ -531,6 +646,16 @@ export default function AdminDashboard({ maps, onMapsChange, onBackToDraft, onLo
 
     nextMaps[nextName] = nextMap
     nextProfiles[nextName] = nextProfile
+
+    for (const mapKey of Object.keys(nextProfiles)) {
+      nextProfiles[mapKey] = {
+        ...nextProfiles[mapKey],
+        weights: weightKeys.reduce((acc, key) => {
+          acc[key] = parseNumber(sharedWeights[key], nextProfile.weights?.[key] ?? 1)
+          return acc
+        }, {} as Partial<Record<WeightKey, number>>),
+      }
+    }
 
     commitMaps(nextMaps)
     setProfiles(nextProfiles)
@@ -638,6 +763,7 @@ export default function AdminDashboard({ maps, onMapsChange, onBackToDraft, onLo
     mapDraft.name.trim() || selectedMapName || savedProfile.mapName,
     mapDraft.mode.trim() || selectedMap?.mode || savedProfile.mode,
     profileDraft,
+    sharedWeights,
     selectedMapName ? profiles[selectedMapName] ?? savedProfile : savedProfile,
   )
   const selectedBrawlerDraft = profileDraft.brawlers[selectedBrawler?.name ?? ""]
@@ -755,65 +881,81 @@ export default function AdminDashboard({ maps, onMapsChange, onBackToDraft, onLo
                 <button type="button" onClick={() => void saveGlobalMatchupDraft()}>
                   Save
                 </button>
+                <button type="button" onClick={() => toggleSection("globalMatchups")} aria-label="Toggle global matchups">
+                  {collapsedSections.globalMatchups ? "+" : "-"}
+                </button>
               </div>
             </div>
 
-            <label className="admin-search">
-              <span>Search brawlers</span>
-              <input
-                value={globalSearch}
-                onChange={(event) => setGlobalSearch(event.target.value)}
-                placeholder="Filter global counters"
-              />
-            </label>
+            {!collapsedSections.globalMatchups ? (
+              <>
+                <label className="admin-search">
+                  <span>Search brawlers</span>
+                  <input
+                    value={globalSearch}
+                    onChange={(event) => setGlobalSearch(event.target.value)}
+                    placeholder="Filter global counters"
+                  />
+                </label>
 
-            <div className="admin-global-list">
-              {filteredGlobalBrawlers.map((brawler) => {
-                const entry = globalDraft[brawler.name] ?? { counters: "", favoredInto: "" }
+                <div className="admin-global-list">
+                  {filteredGlobalBrawlers.map((brawler) => {
+                    const entry = globalDraft[brawler.name] ?? { counters: "", favoredInto: "" }
 
-                return (
-                  <div className="admin-global-row" key={brawler.name}>
-                    <div className="admin-global-head">
-                      <strong>{brawler.name}</strong>
-                      <span>{brawler.rarity}</span>
-                    </div>
-                    <label>
-                      <span>Counters</span>
-                      <textarea
-                        rows={5}
-                        value={entry.counters}
-                        onChange={(event) => updateGlobalDraft(brawler.name, "counters", event.target.value)}
-                        placeholder="Colette: 9.1"
-                      />
-                    </label>
-                    <label>
-                      <span>Favored into</span>
-                      <textarea
-                        rows={5}
-                        value={entry.favoredInto}
-                        onChange={(event) => updateGlobalDraft(brawler.name, "favoredInto", event.target.value)}
-                        placeholder="Bibi: 6.8"
-                      />
-                    </label>
-                  </div>
-                )
-              })}
-            </div>
+                    return (
+                      <div className="admin-global-row" key={brawler.name}>
+                        <div className="admin-global-head">
+                          <strong>{brawler.name}</strong>
+                          <span>{brawler.rarity}</span>
+                        </div>
+                        <label>
+                          <span>Counters</span>
+                          <textarea
+                            rows={5}
+                            value={entry.counters}
+                            onChange={(event) => updateGlobalDraft(brawler.name, "counters", event.target.value)}
+                            placeholder="Colette: 9.1"
+                          />
+                        </label>
+                        <label>
+                          <span>Favored into</span>
+                          <textarea
+                            rows={5}
+                            value={entry.favoredInto}
+                            onChange={(event) => updateGlobalDraft(brawler.name, "favoredInto", event.target.value)}
+                            placeholder="Bibi: 6.8"
+                          />
+                        </label>
+                      </div>
+                    )
+                  })}
+                </div>
+              </>
+            ) : null}
           </div>
 
           <div className="admin-section admin-sync-panel">
             <div className="panel-heading">
               <h2>Sync</h2>
-              <span>{syncState.state}</span>
+              <div className="admin-section-toolbar">
+                <span>{syncState.state}</span>
+                <button type="button" onClick={() => toggleSection("sync")} aria-label="Toggle sync panel">
+                  {collapsedSections.sync ? "+" : "-"}
+                </button>
+              </div>
             </div>
-            <p className="admin-sync-copy">
-              This shows the latest save result. Successful saves update the local cache and Supabase.
-            </p>
-            {syncState.details ? (
-              <details className="admin-sync-details">
-                <summary>Details</summary>
-                <pre>{syncState.details}</pre>
-              </details>
+            {!collapsedSections.sync ? (
+              <>
+                <p className="admin-sync-copy">
+                  This shows the latest save result. Successful saves update the local cache and Supabase.
+                </p>
+                {syncState.details ? (
+                  <details className="admin-sync-details">
+                    <summary>Details</summary>
+                    <pre>{syncState.details}</pre>
+                  </details>
+                ) : null}
+              </>
             ) : null}
           </div>
         </aside>
@@ -828,6 +970,33 @@ export default function AdminDashboard({ maps, onMapsChange, onBackToDraft, onLo
             <div className="admin-grid">
               <div className="admin-card">
                 <div className="panel-heading">
+                  <h2>Shared Weights</h2>
+                  <div className="admin-section-toolbar">
+                    <span>Apply to all maps</span>
+                    <button type="button" onClick={() => toggleSection("sharedWeights")} aria-label="Toggle shared weights">
+                      {collapsedSections.sharedWeights ? "+" : "-"}
+                    </button>
+                  </div>
+                </div>
+                {!collapsedSections.sharedWeights ? (
+                  <div className="admin-fields compact">
+                    {weightKeys.map((field) => (
+                      <label key={field}>
+                        <span>{field}</span>
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          value={sharedWeights[field] ?? ""}
+                          onChange={(event) => updateProfileWeight(field, event.target.value)}
+                        />
+                      </label>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+
+              <div className="admin-card">
+                <div className="panel-heading">
                   <h2>Map Profile</h2>
                   <div className="admin-section-toolbar">
                     <button type="button" onClick={() => void deleteSelectedMap()}>
@@ -836,103 +1005,101 @@ export default function AdminDashboard({ maps, onMapsChange, onBackToDraft, onLo
                     <button type="button" onClick={() => void saveSelectedMapProfile()}>
                       Save profile
                     </button>
+                    <button type="button" onClick={() => toggleSection("mapProfile")} aria-label="Toggle map profile">
+                      {collapsedSections.mapProfile ? "+" : "-"}
+                    </button>
                   </div>
                 </div>
 
-                <div className="admin-fields">
-                  <label>
-                    <span>Map name</span>
-                    <input
-                      value={mapDraft.name}
-                      onChange={(event) => updateMapDraftField("name", event.target.value)}
-                    />
-                  </label>
-                  <label>
-                    <span>Mode</span>
-                    <input
-                      value={mapDraft.mode}
-                      onChange={(event) => updateMapDraftField("mode", event.target.value)}
-                    />
-                  </label>
-                  <label>
-                    <span>Image</span>
-                    <input
-                      value={mapDraft.image}
-                      onChange={(event) => updateMapDraftField("image", event.target.value)}
-                    />
-                  </label>
-                </div>
-              </div>
-
-              <div className="admin-card">
-                <div className="panel-heading">
-                  <h2>Map Weights</h2>
-                  <span>Scoring bias</span>
-                </div>
-                <div className="admin-fields compact">
-                  {weightKeys.map((field) => (
-                    <label key={field}>
-                      <span>{field}</span>
+                {!collapsedSections.mapProfile ? (
+                  <div className="admin-fields">
+                    <label>
+                      <span>Map name</span>
                       <input
-                        type="text"
-                        inputMode="decimal"
-                        value={profileDraft.weights[field] ?? ""}
-                        onChange={(event) => updateProfileWeight(field, event.target.value)}
+                        value={mapDraft.name}
+                        onChange={(event) => updateMapDraftField("name", event.target.value)}
                       />
                     </label>
-                  ))}
-                </div>
+                    <label>
+                      <span>Mode</span>
+                      <input
+                        value={mapDraft.mode}
+                        onChange={(event) => updateMapDraftField("mode", event.target.value)}
+                      />
+                    </label>
+                    <label>
+                      <span>Image</span>
+                      <input
+                        value={mapDraft.image}
+                        onChange={(event) => updateMapDraftField("image", event.target.value)}
+                      />
+                    </label>
+                  </div>
+                ) : null}
               </div>
 
               <div className="admin-card">
                 <div className="panel-heading">
                   <h2>Composition</h2>
-                  <button type="button" onClick={addCompositionRow}>
-                    Add row
-                  </button>
+                  <div className="admin-section-toolbar">
+                    <button type="button" onClick={addCompositionRow}>
+                      Add row
+                    </button>
+                    <button type="button" onClick={() => toggleSection("composition")} aria-label="Toggle composition">
+                      {collapsedSections.composition ? "+" : "-"}
+                    </button>
+                  </div>
                 </div>
-                <div className="admin-composition-list">
-                  {profileDraft.composition.map((row) => (
-                    <div className="admin-composition-row" key={row.id}>
-                      <input
-                        value={row.tags}
-                        onChange={(event) => updateCompositionRow(row.id, "tags", event.target.value)}
-                        placeholder="agro or pressure"
-                      />
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        value={row.count}
-                        onChange={(event) => updateCompositionRow(row.id, "count", event.target.value)}
-                        placeholder="1"
-                      />
-                      <input
-                        type="text"
-                        inputMode="decimal"
-                        value={row.weight}
-                        onChange={(event) => updateCompositionRow(row.id, "weight", event.target.value)}
-                        placeholder="1"
-                      />
-                      <input
-                        value={row.notes}
-                        onChange={(event) => updateCompositionRow(row.id, "notes", event.target.value)}
-                        placeholder="Notes"
-                      />
-                      <button type="button" onClick={() => removeCompositionRow(row.id)}>
-                        Remove
-                      </button>
-                    </div>
-                  ))}
-                </div>
+                {!collapsedSections.composition ? (
+                  <div className="admin-composition-list">
+                    {profileDraft.composition.map((row) => (
+                      <div className="admin-composition-row" key={row.id}>
+                        <input
+                          value={row.tags}
+                          onChange={(event) => updateCompositionRow(row.id, "tags", event.target.value)}
+                          placeholder="agro or pressure"
+                        />
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          value={row.count}
+                          onChange={(event) => updateCompositionRow(row.id, "count", event.target.value)}
+                          placeholder="1"
+                        />
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          value={row.weight}
+                          onChange={(event) => updateCompositionRow(row.id, "weight", event.target.value)}
+                          placeholder="1"
+                        />
+                        <input
+                          value={row.notes}
+                          onChange={(event) => updateCompositionRow(row.id, "notes", event.target.value)}
+                          placeholder="Notes"
+                        />
+                        <button type="button" onClick={() => removeCompositionRow(row.id)}>
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
               </div>
 
               <div className="admin-card admin-brawler-editor">
                 <div className="panel-heading">
                   <h2>Brawler Profile</h2>
-                  <span>{filteredBrawlers.length} brawlers</span>
+                  <div className="admin-section-toolbar">
+                    <span>{filteredBrawlers.length} brawlers</span>
+                    <button type="button" onClick={() => toggleSection("brawlerProfile")} aria-label="Toggle brawler profile">
+                      {collapsedSections.brawlerProfile ? "+" : "-"}
+                    </button>
+                  </div>
                 </div>
 
-                <div className="admin-brawler-shell">
+                {!collapsedSections.brawlerProfile ? (
+                  <div className="admin-brawler-shell">
                   <aside className="admin-brawler-list">
                     <label className="admin-search">
                       <span>Search brawlers</span>
@@ -1031,11 +1198,33 @@ export default function AdminDashboard({ maps, onMapsChange, onBackToDraft, onLo
                       </div>
                     </div>
                   ) : null}
-                </div>
+                  </div>
+                ) : null}
               </div>
 
               <details className="admin-card admin-raw-profile">
                 <summary>Raw profile</summary>
+                <div className="admin-stack">
+                  <div className="admin-raw-actions">
+                    <button type="button" onClick={() => convertRawStats()}>
+                      Convert into current map
+                    </button>
+                    <button type="button" onClick={() => setRawStatsInput("")}>
+                      Clear
+                    </button>
+                  </div>
+                  <label>
+                    <span>Paste website stats for the selected brawler</span>
+                    <textarea
+                      className="admin-json"
+                      rows={16}
+                      value={rawStatsInput}
+                      onChange={(event) => setRawStatsInput(event.target.value)}
+                      placeholder={`Kaze:\nOverall Stats\nS\n76.8\nUse Rate\n6.10%\nPerformance by Mode\nHeist\nS+\n88.3\nUse Rate\n7.40%\n...`}
+                    />
+                  </label>
+                  {rawStatsError ? <p className="admin-sync-copy">{rawStatsError}</p> : null}
+                </div>
                 <div className="admin-raw-actions">
                   <input
                     key={importInputKey}
