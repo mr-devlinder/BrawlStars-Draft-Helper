@@ -123,7 +123,7 @@ function parseNumber(value: string, fallback = 0) {
   return Number.isFinite(next) ? next : fallback
 }
 
-function parseRawStatInput(input: string, mapName: string) {
+function parseRawStatInput(input: string) {
   const lines = input
     .replace(/\r\n/g, "\n")
     .split("\n")
@@ -147,30 +147,24 @@ function parseRawStatInput(input: string, mapName: string) {
     throw new Error("Could not read the overall score from the pasted stats.")
   }
 
-  const targetMap = mapName.trim().toLowerCase()
-  let mapFit: number | undefined
+  const mapScores = new Map<string, number>()
 
-  for (let index = mapIndex + 1; index < lines.length; index += 1) {
-    const next = lines[index]
-    if (next.toLowerCase() !== targetMap) continue
-
+  for (let index = mapIndex + 1; index < lines.length - 2; index += 1) {
+    const name = lines[index]
+    const label = lines[index + 1]
     const score = Number.parseFloat(lines[index + 2] ?? "")
-    if (!Number.isFinite(score)) {
-      throw new Error(`Found ${mapName}, but could not read its score.`)
-    }
 
-    mapFit = score
-    break
-  }
+    if (!name || !label || !Number.isFinite(score)) continue
+    if (name === "Use Rate" || label === "Use Rate") continue
+    if (name === "Performance by Mode" || name === "Overall Stats") continue
 
-  if (typeof mapFit !== "number") {
-    throw new Error(`Could not find the selected map name "${mapName}" in the pasted stats.`)
+    mapScores.set(name, score)
   }
 
   return {
     brawler,
     versatility: overallScore,
-    mapFit,
+    mapScores,
   }
 }
 
@@ -372,6 +366,7 @@ export default function AdminDashboard({ maps, onMapsChange, onBackToDraft, onLo
     globalMatchups: false,
     sync: false,
   })
+  const [rawStatsTab, setRawStatsTab] = useState<"import" | "raw">("import")
   const [rawStatsInput, setRawStatsInput] = useState("")
   const [rawStatsError, setRawStatsError] = useState("")
   const profileImportRef = useRef<HTMLInputElement | null>(null)
@@ -592,30 +587,45 @@ export default function AdminDashboard({ maps, onMapsChange, onBackToDraft, onLo
     }
   }
 
-  function convertRawStats() {
+  async function convertRawStats() {
     try {
-      if (!selectedMap) {
-        throw new Error("Select a map first.")
-      }
-
-      const converted = parseRawStatInput(rawStatsInput, selectedMap.name)
       if (!selectedBrawler) {
         throw new Error("Select a brawler first.")
       }
 
-      setProfileDraft((current) => ({
-        ...current,
-        brawlers: {
-          ...current.brawlers,
-          [selectedBrawler.name]: {
-            ...(current.brawlers[selectedBrawler.name] ?? buildBrawlerDraft()),
-            mapFit: typeof converted.mapFit === "number" ? String(converted.mapFit) : "",
-            versatility: String(converted.versatility),
-          },
+      const converted = parseRawStatInput(rawStatsInput)
+      if (!selectedMap) {
+        throw new Error("Select a map first.")
+      }
+
+      const nextProfiles = Object.entries(profiles).reduce<Record<string, MapRecommendationProfile>>(
+        (acc, [mapName, profile]) => {
+          const nextBrawlers = {
+            ...(profile.brawlers ?? {}),
+            [selectedBrawler.name]: {
+            ...(profile.brawlers?.[selectedBrawler.name] ?? {}),
+            versatility: converted.versatility,
+            mapFit: converted.mapScores.get(mapName),
+            },
+          }
+
+          acc[mapName] = createMapRecommendationProfile({
+            ...profile,
+            brawlers: nextBrawlers,
+          })
+          return acc
         },
-      }))
+        {},
+      )
+
+      setProfiles(nextProfiles)
+      if (selectedMapName && nextProfiles[selectedMapName]) {
+        setProfileDraft(buildProfileDraft(nextProfiles[selectedMapName]))
+      }
       setRawStatsError("")
-      setSync("saved", "Converted raw stats")
+      setSync("saving", "Saving imported stats...")
+      await saveStoredProfileOverrides(nextProfiles)
+      setSync("saved", "Imported stats saved for all maps")
     } catch (error) {
       setRawStatsError(error instanceof Error ? error.message : "Conversion failed.")
       setSync("error", "Could not convert raw stats", formatSyncError(error))
@@ -1204,42 +1214,56 @@ export default function AdminDashboard({ maps, onMapsChange, onBackToDraft, onLo
 
               <details className="admin-card admin-raw-profile">
                 <summary>Raw profile</summary>
-                <div className="admin-stack">
-                  <div className="admin-raw-actions">
-                    <button type="button" onClick={() => convertRawStats()}>
-                      Convert into current map
-                    </button>
-                    <button type="button" onClick={() => setRawStatsInput("")}>
-                      Clear
-                    </button>
-                  </div>
-                  <label>
-                    <span>Paste website stats for the selected brawler</span>
-                    <textarea
-                      className="admin-json"
-                      rows={16}
-                      value={rawStatsInput}
-                      onChange={(event) => setRawStatsInput(event.target.value)}
-                      placeholder={`Kaze:\nOverall Stats\nS\n76.8\nUse Rate\n6.10%\nPerformance by Mode\nHeist\nS+\n88.3\nUse Rate\n7.40%\n...`}
-                    />
-                  </label>
-                  {rawStatsError ? <p className="admin-sync-copy">{rawStatsError}</p> : null}
-                </div>
-                <div className="admin-raw-actions">
-                  <input
-                    key={importInputKey}
-                    ref={profileImportRef}
-                    className="admin-hidden-file"
-                    type="file"
-                    accept=".json,application/json"
-                    onChange={(event) => void handleProfileImport(event)}
-                  />
-                  <button type="button" onClick={() => profileImportRef.current?.click()}>
-                    Import JSON
+                <div className="admin-section-toolbar">
+                  <button type="button" onClick={() => setRawStatsTab("import")}>
+                    Website Stats
+                  </button>
+                  <button type="button" onClick={() => setRawStatsTab("raw")}>
+                    Raw Profile
                   </button>
                 </div>
-                {importProfileError ? <p className="admin-sync-copy">{importProfileError}</p> : null}
-                <textarea className="admin-json" readOnly value={JSON.stringify(selectedProfileJson, null, 2)} rows={28} />
+
+                {rawStatsTab === "import" ? (
+                  <div className="admin-stack">
+                    <div className="admin-raw-actions">
+                      <button type="button" onClick={() => void convertRawStats()}>
+                        Convert into current map
+                      </button>
+                      <button type="button" onClick={() => setRawStatsInput("")}>
+                        Clear
+                      </button>
+                    </div>
+                    <label>
+                      <span>Paste website stats for the selected brawler</span>
+                      <textarea
+                        className="admin-json"
+                        rows={16}
+                        value={rawStatsInput}
+                        onChange={(event) => setRawStatsInput(event.target.value)}
+                        placeholder={`Kaze:\nOverall Stats\nS\n76.8\nUse Rate\n6.10%\nPerformance by Mode\nHeist\nS+\n88.3\nUse Rate\n7.40%\n...`}
+                      />
+                    </label>
+                    {rawStatsError ? <p className="admin-sync-copy">{rawStatsError}</p> : null}
+                  </div>
+                ) : (
+                  <>
+                    <div className="admin-raw-actions">
+                      <input
+                        key={importInputKey}
+                        ref={profileImportRef}
+                        className="admin-hidden-file"
+                        type="file"
+                        accept=".json,application/json"
+                        onChange={(event) => void handleProfileImport(event)}
+                      />
+                      <button type="button" onClick={() => profileImportRef.current?.click()}>
+                        Import JSON
+                      </button>
+                    </div>
+                    {importProfileError ? <p className="admin-sync-copy">{importProfileError}</p> : null}
+                    <textarea className="admin-json" readOnly value={JSON.stringify(selectedProfileJson, null, 2)} rows={28} />
+                  </>
+                )}
               </details>
             </div>
           )}
