@@ -108,6 +108,7 @@ function App() {
   const redBans = banActions.filter((action) => action.team === "red").map((action) => action.brawler)
   const blueTeam = pickActions.filter((action) => action.team === "blue").map((action) => action.brawler)
   const redTeam = pickActions.filter((action) => action.team === "red").map((action) => action.brawler)
+  const bannedNames = new Set(banActions.map((action) => action.brawler.name))
   const phase: Phase = banActions.length < 6 ? "bans" : pickActions.length < 6 ? "picks" : "complete"
   const currentTeam: Team | null = phase === "bans" ? getBanTeam(banActions.length) : phase === "picks" ? draftOrder[pickActions.length] : null
 
@@ -135,8 +136,6 @@ function App() {
     brawler.name.toLowerCase().includes(brawlerSearch.toLowerCase()),
   )
 
-  const usedNames = new Set(actions.map((action) => action.brawler.name))
-
   function resetDraft(nextStartingTeam = startingTeam) {
     setStartingTeam(nextStartingTeam)
     setSelectedMapName(null)
@@ -153,7 +152,9 @@ function App() {
   }
 
   function selectBrawler(brawler: Brawler) {
-    if (phase === "complete" || usedNames.has(brawler.name) || !currentTeam) return
+    if (phase === "complete" || !currentTeam) return
+    if (phase === "picks" && (pickNames.has(brawler.name) || bannedNames.has(brawler.name))) return
+    if (phase === "bans" && banActions.length >= 6) return
 
     setActions((current) => [
       ...current,
@@ -245,6 +246,7 @@ function App() {
   const stepCount = phase === "bans" ? banActions.length + 1 : pickActions.length + 1
   const totalCount = 6
   const recommendationPhase = phase === "complete" ? "picks" : phase
+  const pickNames = new Set(pickActions.map((action) => action.brawler.name))
   const draftState: DraftState = {
     selectedMap,
     phase: recommendationPhase,
@@ -403,7 +405,8 @@ function App() {
             {filteredBrawlers.map((brawler) => (
               <BrawlerCard
                 brawler={brawler}
-                disabled={phase === "complete" || usedNames.has(brawler.name)}
+                disabled={phase === "complete" || (phase === "picks" && (pickNames.has(brawler.name) || bannedNames.has(brawler.name)))}
+                muted={phase === "bans" ? bannedNames.has(brawler.name) : bannedNames.has(brawler.name) || pickNames.has(brawler.name)}
                 key={brawler.name}
                 onClick={() => selectBrawler(brawler)}
               />

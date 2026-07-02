@@ -123,7 +123,11 @@ function parseNumber(value: string, fallback = 0) {
   return Number.isFinite(next) ? next : fallback
 }
 
-function parseRawStatInput(input: string) {
+function normalizeLookup(value: string) {
+  return value.toLowerCase().replace(/\s+/g, " ").trim()
+}
+
+function parseRawStatInput(input: string, knownMapNames: string[]) {
   const lines = input
     .replace(/\r\n/g, "\n")
     .split("\n")
@@ -147,16 +151,16 @@ function parseRawStatInput(input: string) {
     throw new Error("Could not read the overall score from the pasted stats.")
   }
 
+  const mapNameLookup = new Map(knownMapNames.map((name) => [normalizeLookup(name), name] as const))
   const mapScores = new Map<string, number>()
 
   for (let index = mapIndex + 1; index < lines.length - 2; index += 1) {
-    const name = lines[index]
-    const label = lines[index + 1]
-    const score = Number.parseFloat(lines[index + 2] ?? "")
+    const rawName = lines[index]
+    const name = mapNameLookup.get(normalizeLookup(rawName))
+    if (!name) continue
 
-    if (!name || !label || !Number.isFinite(score)) continue
-    if (name === "Use Rate" || label === "Use Rate") continue
-    if (name === "Performance by Mode" || name === "Overall Stats") continue
+    const score = Number.parseFloat(lines[index + 2] ?? "")
+    if (!Number.isFinite(score)) continue
 
     mapScores.set(name, score)
   }
@@ -593,7 +597,7 @@ export default function AdminDashboard({ maps, onMapsChange, onBackToDraft, onLo
         throw new Error("Select a brawler first.")
       }
 
-      const converted = parseRawStatInput(rawStatsInput)
+      const converted = parseRawStatInput(rawStatsInput, Object.keys(maps))
       if (!selectedMap) {
         throw new Error("Select a map first.")
       }

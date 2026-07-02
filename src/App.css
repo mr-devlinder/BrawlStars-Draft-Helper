@@ -739,7 +739,11 @@ input:focus {
 }
 
 .rarity-UltraLegendary {
-  border-image: linear-gradient(to right, #97039c, #a70b85, #d33024, #c57e21, #d4bd37, #90e47f, #84ecc1) 1;
+  background:
+    linear-gradient(rgba(18, 21, 29, 0.92), rgba(18, 21, 29, 0.92)) padding-box,
+    linear-gradient(to right, #97039c, #a70b85, #d33024, #c57e21, #d4bd37, #90e47f, #84ecc1) border-box;
+  border: 1px solid transparent;
+  border-radius: 8px;
 }
 
 .app-footer {
